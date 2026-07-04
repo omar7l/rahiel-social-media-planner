@@ -8,31 +8,24 @@ This fork is intentionally thin: Rahiel branding/legal pages, a fork-owned Docke
 ghcr.io/omar7l/rahiel-social-media-planner:latest
 ```
 
-## Swarm placement
+## Deployment
 
-`docker-compose.yaml` constrains every service to `vps1`:
+The stack is no longer pinned to a separate `vps1` worker. The larger production server is the Swarm manager and can schedule the services directly.
 
-```yaml
-node.hostname == vps1
-```
-
-If the worker node has a different hostname, update `x-vps1-placement` before deploying.
-
-Deploy as a Swarm/Portainer stack, not plain local compose, if you expect placement constraints to work:
+Deploy as a Swarm/Portainer stack:
 
 ```bash
 docker stack deploy -c docker-compose.yaml rahiel-planner
 ```
 
-Verify placement:
+Verify services:
 
 ```bash
+docker service ls
 docker service ps rahiel-planner_postiz
 docker service ps rahiel-planner_postiz-postgres
 docker service ps rahiel-planner_temporal
 ```
-
-If deployment accepts the stack but no containers run on `vps1`, check `docs/swarm-vps1-repair.md`. The common failure is the Swarm manager advertising `172.17.0.1:2377` instead of its real reachable IP.
 
 ## Required core environment
 
