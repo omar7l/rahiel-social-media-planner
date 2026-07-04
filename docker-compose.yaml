@@ -1,7 +1,14 @@
+x-rahiel-placement: &rahiel-placement
+  replicas: 1
+  placement:
+    constraints:
+      - node.hostname == vps1
+
 services:
   postiz:
     image: ghcr.io/omar7l/rahiel-social-media-planner:latest
     restart: always
+    deploy: *rahiel-placement
     environment:
       # Public URLs
       MAIN_URL: "${MAIN_URL}"
@@ -73,6 +80,7 @@ services:
   postiz-postgres:
     image: postgres:17-alpine
     restart: always
+    deploy: *rahiel-placement
     environment:
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
       POSTGRES_USER: "postiz-user"
@@ -90,6 +98,7 @@ services:
   postiz-redis:
     image: redis:7.2
     restart: always
+    deploy: *rahiel-placement
     command: redis-server --appendonly yes
     volumes:
       - postiz-redis-data:/data
@@ -104,6 +113,7 @@ services:
   temporal-elasticsearch:
     image: elasticsearch:7.17.27
     restart: always
+    deploy: *rahiel-placement
     environment:
       - cluster.routing.allocation.disk.threshold_enabled=true
       - cluster.routing.allocation.disk.watermark.low=512mb
@@ -122,6 +132,7 @@ services:
   temporal-postgresql:
     image: postgres:16
     restart: always
+    deploy: *rahiel-placement
     environment:
       POSTGRES_PASSWORD: "temporal"
       POSTGRES_USER: "temporal"
@@ -136,6 +147,7 @@ services:
   temporal:
     image: temporalio/auto-setup:1.28.1
     restart: always
+    deploy: *rahiel-placement
     depends_on:
       - temporal-postgresql
       - temporal-elasticsearch
@@ -157,6 +169,7 @@ services:
   temporal-admin-tools:
     image: temporalio/admin-tools:1.28.1-tctl-1.18.4-cli-1.4.1
     restart: always
+    deploy: *rahiel-placement
     environment:
       - TEMPORAL_ADDRESS=temporal:7233
       - TEMPORAL_CLI_ADDRESS=temporal:7233
@@ -170,6 +183,7 @@ services:
   temporal-ui:
     image: temporalio/ui:2.34.0
     restart: always
+    deploy: *rahiel-placement
     environment:
       - TEMPORAL_ADDRESS=temporal:7233
       - TEMPORAL_CORS_ORIGINS=${MAIN_URL}
