@@ -13,6 +13,7 @@ apps/frontend/src/components/new-layout/logo.tsx merge=ours
 apps/frontend/src/components/ui/logo-text.component.tsx merge=ours
 apps/frontend/src/app/(app)/privacy/page.tsx merge=ours
 apps/frontend/src/app/(app)/terms/page.tsx merge=ours
+apps/frontend/src/app/(app)/deletion/page.tsx merge=ours
 apps/frontend/src/app/(app)/auth/layout.tsx merge=ours
 apps/frontend/src/components/auth/register.tsx merge=ours
 apps/frontend/src/components/new-layout/layout.component.tsx merge=ours

@@ -144,6 +144,9 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
                         <a href="/privacy" className="hover:text-newTextColor underline underline-offset-4">
                           Privacy
                         </a>
+                        <a href="/deletion" className="hover:text-newTextColor underline underline-offset-4">
+                          Data Deletion
+                        </a>
                       </footer>
                     </div>
                   </div>

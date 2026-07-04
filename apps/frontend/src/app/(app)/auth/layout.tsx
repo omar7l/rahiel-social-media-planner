@@ -29,6 +29,9 @@ export default async function AuthLayout({
             <Link href="/privacy" className="hover:text-white underline underline-offset-4">
               Privacy
             </Link>
+            <Link href="/deletion" className="hover:text-white underline underline-offset-4">
+              Data Deletion
+            </Link>
           </footer>
         </div>
       </div>

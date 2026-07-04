@@ -1,19 +1,36 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy | Rahiel Studios Social Media Planner',
-  description: 'Privacy Policy for the Rahiel Studios social media planning tool.',
+  title: 'Privacy Policy | Social Planner RS',
+  description: 'Privacy Policy for Social Planner RS, operated by Rahiel Studios.',
 };
 
 const sections = [
-  ['What this tool is', 'Rahiel Studios Social Media Planner is a self-hosted planning and scheduling workspace operated for Rahiel Studios and its clients.'],
-  ['Data we process', 'We may process account details, workspace members, connected social channel metadata, scheduled posts, uploaded media, analytics returned by connected platforms, support messages, billing metadata when billing is enabled, and technical logs required to secure and operate the service.'],
-  ['Why we process it', 'We process this data to provide scheduling, collaboration, publishing, analytics, media management, authentication, security, troubleshooting, and client support.'],
-  ['Connected platforms', 'When you connect a third-party platform, that platform may share access tokens, account metadata, page/channel identifiers, publishing permissions, analytics, and related API data with the application. You can revoke access through the platform or inside the planner where supported.'],
-  ['Storage and security', 'Data is stored in the infrastructure configured for this deployment. Access is restricted to authorized users and operators. No security system is magic; anyone saying otherwise is selling fairy dust.'],
-  ['Retention', 'We keep operational data while the workspace or client relationship is active, unless deletion is required earlier by law, contract, or a verified user request.'],
-  ['Your rights', 'Depending on your jurisdiction, you may request access, correction, deletion, restriction, export, or objection to processing of your personal data.'],
-  ['Contact', 'For privacy requests, contact Rahiel Studios through the official Rahiel Studios contact channel or your project owner.'],
+  {
+    title: 'Information We Collect',
+    body: 'When a user connects a social media account, we may collect and process account identifiers, profile information, page or channel information, access tokens, refresh tokens, uploaded media, captions, scheduled posts, publishing status, comments, insights, and related metadata.',
+  },
+  {
+    title: 'How We Use Information',
+    body: 'We use this information only to provide the social media planning service. This includes connecting social media accounts, displaying connected accounts, scheduling content, publishing posts, checking publishing status, and showing related account or post information inside the application.',
+  },
+  {
+    title: 'Connected Platforms',
+    body: 'Social Planner RS may connect to third-party platforms including TikTok, Facebook, Instagram, and other supported social media services through their official APIs.',
+  },
+  {
+    title: 'Data Sharing',
+    body: 'We do not sell user data. We only share data with connected social media platforms when necessary to provide features requested by the user, such as publishing a scheduled post or retrieving account information.',
+  },
+  {
+    title: 'Data Storage',
+    body: 'Connected-account information, tokens, uploaded media, and scheduled content may be stored securely for as long as needed to operate the service. Access is limited to authorized users and administrators.',
+  },
+  {
+    title: 'Data Deletion',
+    body: 'Users may disconnect their social media accounts inside the application or revoke access directly from the connected platform, such as TikTok, Facebook, or Instagram.',
+  },
 ];
 
 export default function PrivacyPage() {
@@ -21,18 +38,62 @@ export default function PrivacyPage() {
     <main className="min-h-screen bg-white text-slate-950">
       <div className="mx-auto flex max-w-3xl flex-col gap-10 px-6 py-16">
         <header className="flex flex-col gap-4 border-b border-slate-200 pb-8">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#7433dd]">Rahiel Studios</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#7433dd]">Legal</p>
           <h1 className="text-4xl font-bold tracking-tight">Privacy Policy</h1>
-          <p className="text-base leading-7 text-slate-600">Last updated: 04 July 2026</p>
+          <p className="text-lg leading-8 text-slate-700">
+            How Social Planner RS handles connected-account information and related data.
+          </p>
+          <p className="text-base leading-7 text-slate-600">Last updated: 2026-04-30</p>
         </header>
-        <div className="flex flex-col gap-8">
-          {sections.map(([title, body]) => (
-            <section key={title} className="flex flex-col gap-2">
-              <h2 className="text-xl font-semibold">{title}</h2>
-              <p className="leading-7 text-slate-700">{body}</p>
+
+        <article className="flex flex-col gap-8">
+          <p className="leading-7 text-slate-700">
+            Social Planner RS is an internal social media planning and publishing tool operated by Rahiel Studios.
+            This Privacy Policy explains how we collect, use, store, and delete information when users connect
+            social media accounts to the application.
+          </p>
+
+          {sections.map((section) => (
+            <section key={section.title} className="flex flex-col gap-2">
+              <h2 className="text-xl font-semibold">{section.title}</h2>
+              <p className="leading-7 text-slate-700">{section.body}</p>
             </section>
           ))}
-        </div>
+
+          <section className="flex flex-col gap-2">
+            <h2 className="text-xl font-semibold">Deletion Requests</h2>
+            <p className="leading-7 text-slate-700">
+              To request deletion of stored data, contact us at{' '}
+              <a className="underline" href="mailto:info@rahielstudios.ch">info@rahielstudios.ch</a>. We will delete the data
+              associated with the connected account unless we are required to keep certain information for legal,
+              security, or operational reasons.
+            </p>
+            <p className="leading-7 text-slate-700">
+              Detailed data deletion instructions are available at{' '}
+              <Link className="underline" href="/deletion">Data Deletion Instructions</Link>.
+            </p>
+          </section>
+
+          <section className="flex flex-col gap-2">
+            <h2 className="text-xl font-semibold">Contact</h2>
+            <p className="leading-7 text-slate-700">
+              For privacy questions or deletion requests, contact:{' '}
+              <a className="underline" href="mailto:info@rahielstudios.ch">info@rahielstudios.ch</a>
+            </p>
+            <p className="leading-7 text-slate-700">
+              Operator: Rahiel Studios<br />
+              Neuweilerstrasse 19<br />
+              4054 Basel<br />
+              Switzerland
+            </p>
+          </section>
+        </article>
+
+        <footer className="flex flex-wrap gap-4 border-t border-slate-200 pt-6 text-sm text-slate-600">
+          <Link href="/privacy" className="underline">Privacy Policy</Link>
+          <Link href="/terms" className="underline">Terms of Service</Link>
+          <Link href="/deletion" className="underline">Data Deletion Instructions</Link>
+        </footer>
       </div>
     </main>
   );
