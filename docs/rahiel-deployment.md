@@ -82,7 +82,7 @@ Cloudflare R2 for uploaded media:
 
 ```env
 STORAGE_PROVIDER=cloudflare
-CLOUDFLARE_ACCOUNT_ID=<cloudflare-account-id>
+CLOUDFLARE_ACCOUNT_ID=8bc2abad28773a3cc1077e3cf93784f3
 CLOUDFLARE_ACCESS_KEY=<r2-access-key-id>
 CLOUDFLARE_SECRET_ACCESS_KEY=<r2-secret-access-key>
 CLOUDFLARE_REGION=auto
@@ -92,6 +92,8 @@ NEXT_PUBLIC_UPLOAD_DIRECTORY=https://pub-49af1116e1fe4d6693e180820cdd9455.r2.dev
 ```
 
 Use the public `r2.dev` URL or a custom public bucket domain for `CLOUDFLARE_BUCKET_URL`. Do not use the private S3 API endpoint there; browsers need a public media URL.
+
+In the production compose, the non-secret R2 values are hard-coded. Only `CLOUDFLARE_ACCESS_KEY`, `CLOUDFLARE_SECRET_ACCESS_KEY`, and `RESEND_API_KEY` must be supplied as stack environment variables/secrets.
 
 R2 replaces only uploaded media storage. It does **not** replace Postgres, Redis, Temporal Postgres, or Temporal Elasticsearch.
 
