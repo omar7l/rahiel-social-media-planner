@@ -11,3 +11,4 @@ apps/frontend/src/app/(app)/layout.tsx merge=ours
 apps/frontend/src/components/layout/mode.component.tsx merge=ours
 apps/frontend/src/components/new-layout/logo.tsx merge=ours
 apps/frontend/src/components/ui/logo-text.component.tsx merge=ours
+docker-compose.yaml merge=ours
