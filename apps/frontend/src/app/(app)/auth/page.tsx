@@ -6,17 +6,23 @@ import { isGeneralServerSide } from '@gitroom/helpers/utils/is.general.server.si
 import Link from 'next/link';
 import { getT } from '@gitroom/react/translation/get.translation.service.backend';
 import { LoginWithOidc } from '@gitroom/frontend/components/auth/login.with.oidc';
+import { cookies } from 'next/headers';
 export const metadata: Metadata = {
   title: `${isGeneralServerSide() ? 'Postiz' : 'Gitroom'} Register`,
   description: '',
 };
-export default async function Auth(params: {searchParams: Promise<{provider: string}>}) {
+export default async function Auth(params: {
+  searchParams: Promise<{provider?: string; org?: string}>;
+}) {
   const t = await getT();
+  const searchParams = await params?.searchParams;
+  const inviteCookie = (await cookies()).get('org')?.value;
+  const hasInvite = Boolean(searchParams?.org || inviteCookie);
   if (process.env.DISABLE_REGISTRATION === 'true') {
     const canRegister = (
       await (await internalFetch('/auth/can-register')).json()
     ).register;
-    if (!canRegister && !(await params?.searchParams)?.provider) {
+    if (!canRegister && !searchParams?.provider && !hasInvite) {
       return (
         <>
           <LoginWithOidc />

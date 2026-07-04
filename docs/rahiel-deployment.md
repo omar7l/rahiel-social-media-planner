@@ -102,6 +102,8 @@ For normal operation:
 DISABLE_REGISTRATION=true
 ```
 
+Invite links still allow invited users to create/login into an account and join the existing organization. Public self-serve registration stays disabled for everyone else.
+
 To onboard users manually, temporarily set:
 
 ```env
