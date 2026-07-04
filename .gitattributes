@@ -1,0 +1,13 @@
+# Keep the Rahiel fork lightweight during monthly upstream merges.
+# The monthly sync workflow configures the `ours` merge driver for these paths.
+.github/workflows/* merge=ours
+.github/Dependabot.yml merge=ours
+.github/Dependabot.disabled.yml merge=ours
+apps/frontend/public/favicon.ico merge=ours
+apps/frontend/public/favicon.png merge=ours
+apps/frontend/public/postiz-fav.png merge=ours
+apps/frontend/public/rahiel-logo.png merge=ours
+apps/frontend/src/app/(app)/layout.tsx merge=ours
+apps/frontend/src/components/layout/mode.component.tsx merge=ours
+apps/frontend/src/components/new-layout/logo.tsx merge=ours
+apps/frontend/src/components/ui/logo-text.component.tsx merge=ours

@@ -40,11 +40,17 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   return (
     <html>
       <head>
+        <title>Rahiel Studios - Social Media Planner</title>
+        <meta
+          name="description"
+          content="Rahiel Studios social media planning and scheduling workspace."
+        />
         <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/favicon.png" type="image/png" />
         {!!process.env.DATAFAST_WEBSITE_ID && (
           <Script
             data-website-id={process.env.DATAFAST_WEBSITE_ID}
-            data-domain="postiz.com"
+            data-domain={process.env.NEXT_PUBLIC_RAHIEL_PLANNER_DOMAIN || 'planner.rahiel.ch'}
             src="https://datafa.st/js/script.js"
             strategy="afterInteractive"
           />
@@ -52,7 +58,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       </head>
       <ChangeDirClient />
       <body
-        className={clsx(jakartaSans.className, 'dark text-primary !bg-primary')}
+        className={clsx(jakartaSans.className, 'light text-primary !bg-primary')}
       >
         <VariableContextComponent
           storageProvider={
