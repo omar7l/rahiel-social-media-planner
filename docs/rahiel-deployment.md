@@ -32,6 +32,8 @@ docker service ps rahiel-planner_postiz-postgres
 docker service ps rahiel-planner_temporal
 ```
 
+If deployment accepts the stack but no containers run on `vps1`, check `docs/swarm-vps1-repair.md`. The common failure is the Swarm manager advertising `172.17.0.1:2377` instead of its real reachable IP.
+
 ## Required core environment
 
 ```env
