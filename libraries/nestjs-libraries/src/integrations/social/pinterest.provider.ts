@@ -13,6 +13,7 @@ import { timer } from '@gitroom/helpers/utils/timer';
 import {
   BadBody,
   SocialAbstract,
+  ValidityMedia,
 } from '@gitroom/nestjs-libraries/integrations/social.abstract';
 import dayjs from 'dayjs';
 import { Tool } from '@gitroom/nestjs-libraries/integrations/tool.decorator';
@@ -43,11 +44,50 @@ export class PinterestProvider
 
   dto = PinterestSettingsDto;
 
+  override async checkValidity(
+    [firstItem]: Array<ValidityMedia[]>
+  ): Promise<string | true> {
+    const isMp4 = firstItem?.find(
+      (item) => (item?.path?.indexOf?.('mp4') ?? -1) > -1
+    );
+    const isPicture = firstItem?.find(
+      (item) => (item?.path?.indexOf?.('mp4') ?? -1) === -1
+    );
+    if ((firstItem?.length ?? 0) === 0) {
+      return 'Requires at least one media';
+    }
+    if ((firstItem?.length ?? 0) > 5) {
+      return 'You can only have up to 5 media items';
+    }
+    if (isMp4 && firstItem?.length !== 2 && !isPicture) {
+      return 'If posting a video you have to also include a cover image as second media';
+    }
+    if (isMp4 && (firstItem?.length ?? 0) > 2) {
+      return 'If posting a video you can only have two media items';
+    }
+
+    if (
+      (firstItem?.length ?? 0) > 1 &&
+      firstItem?.every((p) => (p?.path?.indexOf?.('mp4') ?? -1) === -1)
+    ) {
+      const loadAll = await Promise.all(
+        firstItem?.map((p) => this.getImageDimensions(p?.path)) ?? []
+      );
+      const checkAllTheSameWidthHeight = loadAll?.every((p, i, arr) => {
+        return p?.width === arr?.[0]?.width && p?.height === arr?.[0]?.height;
+      });
+      if (!checkAllTheSameWidthHeight) {
+        return 'Requires all images to have the same width and height';
+      }
+    }
+    return true;
+  }
+
   editor = 'normal' as const;
 
   public override handleErrors(body: string):
     | {
-        type: 'refresh-token' | 'bad-body';
+        type: 'refresh-token' | 'bad-body' | 'retry';
         value: string;
       }
     | undefined {
@@ -56,6 +96,24 @@ export class PinterestProvider
         type: 'bad-body' as const,
         value: 'You can upload a maximum of 5 images per post on Pinterest.',
       };
+    }
+    if (body.indexOf('Unable to reach the URL') > -1) {
+      return {
+        type: 'retry' as const,
+        value: 'Pinterest was unable to reach the URL provided. Please check the link and try again.',
+      }
+    }
+    if (body.indexOf(`does not match '^\\\\\\\\\\\\\\\\d+$'`) > -1) {
+      return {
+        type: 'bad-body' as const,
+        value: 'The board ID must be a numeric string. Please check the board ID format.',
+      }
+    }
+    if (body.indexOf('Board not found') > -1) {
+      return {
+        type: 'bad-body' as const,
+        value: 'The specified board was not found. Please check the board ID.',
+      }
     }
     if (body.indexOf('cover_image_url or cover_image_content_type') > -1) {
       return {
@@ -230,7 +288,18 @@ export class PinterestProvider
       await axios.post(upload_url, formData);
 
       let statusCode = '';
+      let attempts = 0;
+      const maxAttempts = 18; // ~9 minutes at 30s interval
       while (statusCode !== 'succeeded') {
+        if (attempts++ >= maxAttempts) {
+          throw new BadBody(
+            'pinterest',
+            JSON.stringify({}),
+            {} as any,
+            'The file took too long to process, please try again'
+          );
+        }
+
         const mediafile = await (
           await this.fetch(
             'https://api.pinterest.com/v5/media/' + media_id,

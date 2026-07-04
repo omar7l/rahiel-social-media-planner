@@ -138,7 +138,7 @@ export class PostsRepository {
             OR: [
               {
                 organizationId: orgId,
-              }
+              },
             ],
           },
           {
@@ -159,6 +159,7 @@ export class PostsRepository {
         ],
         integration: {
           deletedAt: null,
+          organizationId: orgId,
         },
         deletedAt: null,
         parentPostId: null,
@@ -229,7 +230,6 @@ export class PostsRepository {
       stateFilter === 'scheduled'
         ? {
             state: State.QUEUE,
-            publishDate: { gte: dayjs.utc().toDate() },
           }
         : stateFilter === 'draft'
         ? { state: State.DRAFT }
@@ -255,16 +255,24 @@ export class PostsRepository {
         },
       ],
       ...stateAndDate,
+      // Published posts were already posted (publishDate in the past), so fetch
+      // all of them; everything else stays upcoming. Ordering handles the rest.
+      ...(stateFilter === 'published'
+        ? {}
+        : { publishDate: { gte: dayjs.utc().toDate() } }),
       deletedAt: null as Date | null,
       parentPostId: null as string | null,
       intervalInDays: null as number | null,
-      ...(query.customer
-        ? {
-            integration: {
+
+      integration: {
+        deletedAt: null as any,
+        organizationId: orgId,
+        ...(query.customer
+          ? {
               customerId: query.customer,
-            },
-          }
-        : {}),
+            }
+          : {}),
+      },
     };
 
     const [posts, total] = await Promise.all([
@@ -282,6 +290,7 @@ export class PostsRepository {
           releaseURL: true,
           releaseId: true,
           state: true,
+          intervalInDays: true,
           group: true,
           creationMethod: true,
           tags: {
