@@ -2,6 +2,7 @@ import { getT } from '@gitroom/react/translation/get.translation.service.backend
 
 export const dynamic = 'force-dynamic';
 import { ReactNode } from 'react';
+import Link from 'next/link';
 import loadDynamic from 'next/dynamic';
 import { TestimonialComponent } from '@gitroom/frontend/components/auth/testimonial.component';
 import { LogoTextComponent } from '@gitroom/frontend/components/ui/logo-text.component';
@@ -21,6 +22,14 @@ export default async function AuthLayout({
         <div className="w-full max-w-[440px] mx-auto justify-center gap-[20px] h-full flex flex-col text-white">
           <LogoTextComponent />
           <div className="flex">{children}</div>
+          <footer className="mt-auto flex justify-center gap-4 pt-8 text-xs text-white/55">
+            <Link href="/terms" className="hover:text-white underline underline-offset-4">
+              Terms
+            </Link>
+            <Link href="/privacy" className="hover:text-white underline underline-offset-4">
+              Privacy
+            </Link>
+          </footer>
         </div>
       </div>
       <div className="text-[36px] flex-1 pt-[88px] hidden lg:flex flex-col items-center">

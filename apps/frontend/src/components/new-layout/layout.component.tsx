@@ -137,6 +137,14 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
                         </div>
                       </div>
                       <div className="flex flex-1 gap-[1px]">{children}</div>
+                      <footer className="flex justify-end gap-[16px] bg-newBgColorInner px-[20px] py-[10px] text-[12px] text-textItemBlur">
+                        <a href="/terms" className="hover:text-newTextColor underline underline-offset-4">
+                          Terms
+                        </a>
+                        <a href="/privacy" className="hover:text-newTextColor underline underline-offset-4">
+                          Privacy
+                        </a>
+                      </footer>
                     </div>
                   </div>
                 </>
