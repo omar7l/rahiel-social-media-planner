@@ -42,16 +42,15 @@ services:
       RUN_CRON: "true"
 
       # Email / invites
-      EMAIL_PROVIDER: "resend"
-      RESEND_API_KEY: "${RESEND_API_KEY}"
+      EMAIL_PROVIDER: "nodemailer"
       EMAIL_FROM_NAME: "Rahiel Agency"
-      EMAIL_FROM_ADDRESS: "no-reply@rahielstudios.ch"
+      EMAIL_FROM_ADDRESS: "info@rahielstudios.ch"
 
-      # SMTP fallback when EMAIL_PROVIDER=nodemailer
-      EMAIL_HOST: "${EMAIL_HOST}"
-      EMAIL_PORT: "${EMAIL_PORT}"
+      # SMTP via Infomaniak
+      EMAIL_HOST: "mail.infomaniak.com"
+      EMAIL_PORT: "587"
       EMAIL_SECURE: "false"
-      EMAIL_USER: "${EMAIL_USER}"
+      EMAIL_USER: "info@rahielstudios.ch"
       EMAIL_PASS: "${EMAIL_PASS}"
 
       # Storage

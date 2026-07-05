@@ -42,26 +42,17 @@ DISABLE_REGISTRATION=true
 
 Invites, activation emails, and password reset emails require an email provider.
 
-Preferred: Resend. MAS Auto uses the same simple pattern: one `RESEND_API_KEY` plus a verified sender address. In Postiz the variable names are slightly different from the MAS website (`EMAIL_FROM_*` instead of `MAIL_FROM`).
-
-```env
-EMAIL_PROVIDER=resend
-RESEND_API_KEY=re_...
-EMAIL_FROM_NAME=Rahiel Agency
-EMAIL_FROM_ADDRESS=no-reply@rahielstudios.ch
-```
-
-SMTP fallback:
+Production email uses Infomaniak SMTP through Postiz's `nodemailer` provider. Postiz expects `EMAIL_*` variable names, not `EMAIL_SERVER_*`.
 
 ```env
 EMAIL_PROVIDER=nodemailer
-EMAIL_HOST=smtp.example.com
+EMAIL_HOST=mail.infomaniak.com
 EMAIL_PORT=587
 EMAIL_SECURE=false
-EMAIL_USER=...
-EMAIL_PASS=...
+EMAIL_USER=info@rahielstudios.ch
+EMAIL_PASS=<infomaniak-mailbox-password>
 EMAIL_FROM_NAME=Rahiel Agency
-EMAIL_FROM_ADDRESS=no-reply@rahielstudios.ch
+EMAIL_FROM_ADDRESS=info@rahielstudios.ch
 ```
 
 ## Storage
@@ -88,7 +79,7 @@ NEXT_PUBLIC_UPLOAD_DIRECTORY=https://pub-49af1116e1fe4d6693e180820cdd9455.r2.dev
 
 Use the public `r2.dev` URL or a custom public bucket domain for `CLOUDFLARE_BUCKET_URL`. Do not use the private S3 API endpoint there; browsers need a public media URL.
 
-In the production compose, the non-secret R2 values are hard-coded. Only `CLOUDFLARE_ACCESS_KEY`, `CLOUDFLARE_SECRET_ACCESS_KEY`, and `RESEND_API_KEY` must be supplied as stack environment variables/secrets.
+In the production compose, the non-secret R2 and SMTP values are hard-coded. Only `CLOUDFLARE_ACCESS_KEY`, `CLOUDFLARE_SECRET_ACCESS_KEY`, and `EMAIL_PASS` must be supplied as stack environment variables/secrets.
 
 R2 replaces only uploaded media storage. It does **not** replace Postgres, Redis, Temporal Postgres, or Temporal Elasticsearch.
 
