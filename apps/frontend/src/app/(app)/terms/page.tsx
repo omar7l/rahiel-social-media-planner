@@ -13,7 +13,7 @@ const sections = [
   },
   {
     title: 'Authorized Users',
-    body: 'The service is intended for authorized internal use only. Users must not share their login access with unauthorized persons.',
+    body: 'The service is intended for authorized users and approved team/client workflows only. Users must not share their login access with unauthorized persons.',
   },
   {
     title: 'User Responsibility',
@@ -22,6 +22,10 @@ const sections = [
   {
     title: 'Platform Rules',
     body: 'Users must comply with the terms, policies, community guidelines, and developer rules of each connected social media platform, including TikTok, Facebook, Instagram, and any other connected service.',
+  },
+  {
+    title: 'TikTok Direct Post Restrictions',
+    body: 'Users understand that TikTok may limit Direct Post API usage before audit approval, including requiring SELF_ONLY/private visibility, limiting eligible posting users, or requiring accounts to meet TikTok platform conditions. Social Planner RS respects these TikTok API restrictions and does not guarantee that all privacy levels are available at all times.',
   },
   {
     title: 'Connected Accounts',
@@ -58,7 +62,7 @@ export default function TermsPage() {
 
         <article className="flex flex-col gap-8">
           <p className="leading-7 text-slate-700">
-            These Terms of Service govern the use of Social Planner RS, an internal social media planning and
+            These Terms of Service govern the use of Social Planner RS, a social media planning and
             publishing tool operated by Rahiel Studios.
           </p>
 

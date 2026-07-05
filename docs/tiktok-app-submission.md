@@ -34,4 +34,5 @@ Character count: 961 including newlines.
 - Verify latest image is deployed on the server.
 - Verify `/privacy`, `/terms`, and `/deletion` are public without login.
 - Verify the app/login page loads without 404/500.
+- Verify legal pages mention TikTok Direct Post limits and SELF_ONLY/private visibility before audit approval.
 - Use the exact text above for the 1000-character product/scope field.

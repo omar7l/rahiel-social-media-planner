@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 const sections = [
   {
     title: 'Information We Collect',
-    body: 'When a user connects a social media account, we may collect and process account identifiers, profile information, page or channel information, access tokens, refresh tokens, uploaded media, captions, scheduled posts, publishing status, comments, insights, and related metadata.',
+    body: 'When a user connects a social media account, we may collect and process account identifiers, profile information, page or channel information, access tokens, refresh tokens, uploaded media, captions, scheduled posts, privacy settings, publishing status, comments, insights, and related metadata.',
   },
   {
     title: 'How We Use Information',
@@ -17,7 +17,11 @@ const sections = [
   },
   {
     title: 'Connected Platforms',
-    body: 'Social Planner RS may connect to third-party platforms including TikTok, Facebook, Instagram, and other supported social media services through their official APIs.',
+    body: 'Social Planner RS may connect to third-party platforms including TikTok, Facebook, Instagram, and other supported social media services through their official APIs. For TikTok, the app uses approved scopes only to identify the connected account, show account context, list relevant videos where available, upload user-selected media, and publish content after user action.',
+  },
+  {
+    title: 'TikTok Direct Post Privacy Controls',
+    body: 'When publishing through TikTok Direct Post, the app respects TikTok API requirements and available privacy levels. Before TikTok audit approval, TikTok may restrict Direct Post submissions to SELF_ONLY/private visibility and other platform limits. We do not override TikTok platform restrictions.',
   },
   {
     title: 'Data Sharing',
@@ -48,7 +52,7 @@ export default function PrivacyPage() {
 
         <article className="flex flex-col gap-8">
           <p className="leading-7 text-slate-700">
-            Social Planner RS is an internal social media planning and publishing tool operated by Rahiel Studios.
+            Social Planner RS is a social media planning and publishing tool operated by Rahiel Studios.
             This Privacy Policy explains how we collect, use, store, and delete information when users connect
             social media accounts to the application.
           </p>

@@ -27,7 +27,7 @@ const sections = [
   },
   {
     title: 'Platform Access Revocation',
-    body: 'You can also revoke Social Planner RS access directly from the connected platform. For Facebook and Instagram, go to your Facebook settings, open Apps and Websites, find the app, and remove it.',
+    body: 'You can also revoke Social Planner RS access directly from the connected platform. For TikTok, revoke access from your TikTok account app permissions/settings where available. For Facebook and Instagram, go to your Facebook settings, open Apps and Websites, find the app, and remove it.',
   },
   {
     title: 'Processing Time',
@@ -54,7 +54,7 @@ export default function DataDeletionPage() {
 
         <article className="flex flex-col gap-8">
           <p className="leading-7 text-slate-700">
-            Social Planner RS is an internal social media planning and publishing tool operated by Rahiel Studios.
+            Social Planner RS is a social media planning and publishing tool operated by Rahiel Studios.
             Users can request deletion of personal data associated with connected social media accounts by following
             the instructions on this page.
           </p>
