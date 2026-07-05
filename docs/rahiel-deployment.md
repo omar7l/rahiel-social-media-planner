@@ -47,8 +47,8 @@ Preferred: Resend. MAS Auto uses the same simple pattern: one `RESEND_API_KEY` p
 ```env
 EMAIL_PROVIDER=resend
 RESEND_API_KEY=re_...
-EMAIL_FROM_NAME=Rahiel Studios
-EMAIL_FROM_ADDRESS=planner@rahielstudios.ch
+EMAIL_FROM_NAME=Rahiel Agency
+EMAIL_FROM_ADDRESS=no-reply@rahielstudios.ch
 ```
 
 SMTP fallback:
@@ -60,8 +60,8 @@ EMAIL_PORT=587
 EMAIL_SECURE=false
 EMAIL_USER=...
 EMAIL_PASS=...
-EMAIL_FROM_NAME=Rahiel Studios
-EMAIL_FROM_ADDRESS=planner@rahielstudios.ch
+EMAIL_FROM_NAME=Rahiel Agency
+EMAIL_FROM_ADDRESS=no-reply@rahielstudios.ch
 ```
 
 ## Storage

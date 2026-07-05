@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy | Social Planner RS',
-  description: 'Privacy Policy for Social Planner RS, operated by Rahiel Studios.',
+  description: 'Privacy Policy for Social Planner RS, operated by Rahiel Agency.',
 };
 
 const sections = [
@@ -52,7 +52,7 @@ export default function PrivacyPage() {
 
         <article className="flex flex-col gap-8">
           <p className="leading-7 text-slate-700">
-            Social Planner RS is a social media planning and publishing tool operated by Rahiel Studios.
+            Social Planner RS is a social media planning and publishing tool operated by Rahiel Agency.
             This Privacy Policy explains how we collect, use, store, and delete information when users connect
             social media accounts to the application.
           </p>
@@ -85,7 +85,7 @@ export default function PrivacyPage() {
               <a className="underline" href="mailto:info@rahielstudios.ch">info@rahielstudios.ch</a>
             </p>
             <p className="leading-7 text-slate-700">
-              Operator: Rahiel Studios<br />
+              Operator: Rahiel Agency<br />
               Neuweilerstrasse 19<br />
               4054 Basel<br />
               Switzerland

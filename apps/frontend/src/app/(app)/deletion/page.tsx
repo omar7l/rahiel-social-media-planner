@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Data Deletion Instructions | Social Planner RS',
-  description: 'Data deletion instructions for Social Planner RS, operated by Rahiel Studios.',
+  description: 'Data deletion instructions for Social Planner RS, operated by Rahiel Agency.',
 };
 
 const sections = [
@@ -54,7 +54,7 @@ export default function DataDeletionPage() {
 
         <article className="flex flex-col gap-8">
           <p className="leading-7 text-slate-700">
-            Social Planner RS is a social media planning and publishing tool operated by Rahiel Studios.
+            Social Planner RS is a social media planning and publishing tool operated by Rahiel Agency.
             Users can request deletion of personal data associated with connected social media accounts by following
             the instructions on this page.
           </p>
@@ -73,7 +73,7 @@ export default function DataDeletionPage() {
               <a className="underline" href="mailto:info@rahielstudios.ch">info@rahielstudios.ch</a>
             </p>
             <p className="leading-7 text-slate-700">
-              Operator: Rahiel Studios<br />
+              Operator: Rahiel Agency<br />
               Neuweilerstrasse 19<br />
               4054 Basel<br />
               Switzerland

@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Terms of Service | Social Planner RS',
-  description: 'Terms of Service for Social Planner RS, operated by Rahiel Studios.',
+  description: 'Terms of Service for Social Planner RS, operated by Rahiel Agency.',
 };
 
 const sections = [
@@ -45,7 +45,7 @@ const sections = [
   },
   {
     title: 'Limitation of Liability',
-    body: 'To the maximum extent permitted by law, Rahiel Studios is not liable for indirect, incidental, or consequential damages arising from the use of the service, failed publishing, account restrictions, or third-party platform changes.',
+    body: 'To the maximum extent permitted by law, Rahiel Agency is not liable for indirect, incidental, or consequential damages arising from the use of the service, failed publishing, account restrictions, or third-party platform changes.',
   },
 ];
 
@@ -63,7 +63,7 @@ export default function TermsPage() {
         <article className="flex flex-col gap-8">
           <p className="leading-7 text-slate-700">
             These Terms of Service govern the use of Social Planner RS, a social media planning and
-            publishing tool operated by Rahiel Studios.
+            publishing tool operated by Rahiel Agency.
           </p>
 
           {sections.map((section) => (
@@ -80,7 +80,7 @@ export default function TermsPage() {
               <a className="underline" href="mailto:info@rahielstudios.ch">info@rahielstudios.ch</a>
             </p>
             <p className="leading-7 text-slate-700">
-              Operator: Rahiel Studios<br />
+              Operator: Rahiel Agency<br />
               Neuweilerstrasse 19<br />
               4054 Basel<br />
               Switzerland
