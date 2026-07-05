@@ -42,22 +42,20 @@ services:
       RUN_CRON: "true"
 
       # Email / invites
-      EMAIL_PROVIDER: "nodemailer"
-      EMAIL_FROM_NAME: "Rahiel Agency"
-      EMAIL_FROM_ADDRESS: "info@rahielstudios.ch"
+      EMAIL_PROVIDER: "resend"
+      RESEND_API_KEY: "${RESEND_API_KEY}"
+      EMAIL_FROM_NAME: "Rahiel Studios"
+      EMAIL_FROM_ADDRESS: "<no-reply@masauto.rahielstudios.ch>"
 
-      # SMTP via Infomaniak
-      EMAIL_HOST: "mail.infomaniak.com"
-      EMAIL_PORT: "587"
+      # SMTP fallback when EMAIL_PROVIDER=nodemailer
+      EMAIL_HOST: "${EMAIL_HOST}"
+      EMAIL_PORT: "${EMAIL_PORT}"
       EMAIL_SECURE: "false"
-      EMAIL_USER: "info@rahielstudios.ch"
+      EMAIL_USER: "${EMAIL_USER}"
       EMAIL_PASS: "${EMAIL_PASS}"
 
       # Storage
       STORAGE_PROVIDER: "cloudflare"
-      UPLOAD_DIRECTORY: "/uploads"
-      NEXT_PUBLIC_UPLOAD_DIRECTORY: "https://pub-49af1116e1fe4d6693e180820cdd9455.r2.dev"
-
       # Cloudflare R2 when STORAGE_PROVIDER=cloudflare
       CLOUDFLARE_ACCOUNT_ID: "8bc2abad28773a3cc1077e3cf93784f3"
       CLOUDFLARE_ACCESS_KEY: "${CLOUDFLARE_ACCESS_KEY}"
