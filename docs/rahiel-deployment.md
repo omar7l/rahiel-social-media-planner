@@ -42,24 +42,17 @@ DISABLE_REGISTRATION=true
 
 Invites, activation emails, and password reset emails require an email provider.
 
-Production email uses Resend. Keep the compose/env naming exactly as Postiz expects.
-
-```env
-EMAIL_PROVIDER=resend
-RESEND_API_KEY=<resend-api-key>
-EMAIL_FROM_NAME=Rahiel Studios
-EMAIL_FROM_ADDRESS=<no-reply@masauto.rahielstudios.ch>
-```
-
-SMTP fallback is left in the compose for switching later if needed:
+Production email uses Infomaniak SMTP through Postiz's `nodemailer` provider. Keep the compose/env naming exactly as Postiz expects.
 
 ```env
 EMAIL_PROVIDER=nodemailer
+EMAIL_FROM_NAME=Rahiel Studios
 EMAIL_HOST=mail.infomaniak.com
 EMAIL_PORT=587
 EMAIL_SECURE=false
 EMAIL_USER=info@rahielstudios.ch
 EMAIL_PASS=<infomaniak-mailbox-password>
+EMAIL_FROM_ADDRESS=info@rahielstudios.ch
 ```
 
 ## Storage
@@ -86,7 +79,7 @@ NEXT_PUBLIC_UPLOAD_DIRECTORY=https://pub-49af1116e1fe4d6693e180820cdd9455.r2.dev
 
 Use the public `r2.dev` URL or a custom public bucket domain for `CLOUDFLARE_BUCKET_URL`. Do not use the private S3 API endpoint there; browsers need a public media URL.
 
-In the production compose, the non-secret R2 values are hard-coded. Only `CLOUDFLARE_ACCESS_KEY`, `CLOUDFLARE_SECRET_ACCESS_KEY`, and `RESEND_API_KEY` must be supplied as stack environment variables/secrets.
+In the production compose, the non-secret R2 and SMTP values are hard-coded. Only `CLOUDFLARE_ACCESS_KEY`, `CLOUDFLARE_SECRET_ACCESS_KEY`, and `EMAIL_PASS` must be supplied as stack environment variables/secrets.
 
 R2 replaces only uploaded media storage. It does **not** replace Postgres, Redis, Temporal Postgres, or Temporal Elasticsearch.
 
