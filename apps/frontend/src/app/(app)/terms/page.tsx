@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Terms of Service | Social Planner RS',
-  description: 'Terms of Service for Social Planner RS, operated by Rahiel Agency.',
+  title: 'Planner RS Terms of Service',
+  description: 'Terms of Service for Planner RS, operated by Rahiel Agency.',
 };
 
 const sections = [
@@ -55,7 +55,7 @@ export default function TermsPage() {
       <div className="mx-auto flex max-w-3xl flex-col gap-10 px-6 py-16">
         <header className="flex flex-col gap-4 border-b border-slate-200 pb-8">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#7433dd]">Legal</p>
-          <h1 className="text-4xl font-bold tracking-tight">Terms of Service</h1>
+          <h1 className="text-4xl font-bold tracking-tight">Planner RS Terms of Service</h1>
           <p className="text-lg leading-8 text-slate-700">Rules for authorized internal use of Social Planner RS.</p>
           <p className="text-base leading-7 text-slate-600">Last updated: 2026-04-30</p>
         </header>
@@ -89,6 +89,7 @@ export default function TermsPage() {
         </article>
 
         <footer className="flex flex-wrap gap-4 border-t border-slate-200 pt-6 text-sm text-slate-600">
+          <Link href="/about" className="underline">About Planner RS</Link>
           <Link href="/privacy" className="underline">Privacy Policy</Link>
           <Link href="/terms" className="underline">Terms of Service</Link>
           <Link href="/deletion" className="underline">Data Deletion Instructions</Link>

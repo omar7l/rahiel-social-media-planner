@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy | Social Planner RS',
-  description: 'Privacy Policy for Social Planner RS, operated by Rahiel Agency.',
+  title: 'Planner RS Privacy Policy',
+  description: 'Privacy Policy for Planner RS, operated by Rahiel Agency.',
 };
 
 const sections = [
@@ -43,7 +43,7 @@ export default function PrivacyPage() {
       <div className="mx-auto flex max-w-3xl flex-col gap-10 px-6 py-16">
         <header className="flex flex-col gap-4 border-b border-slate-200 pb-8">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#7433dd]">Legal</p>
-          <h1 className="text-4xl font-bold tracking-tight">Privacy Policy</h1>
+          <h1 className="text-4xl font-bold tracking-tight">Planner RS Privacy Policy</h1>
           <p className="text-lg leading-8 text-slate-700">
             How Social Planner RS handles connected-account information and related data.
           </p>
@@ -94,6 +94,7 @@ export default function PrivacyPage() {
         </article>
 
         <footer className="flex flex-wrap gap-4 border-t border-slate-200 pt-6 text-sm text-slate-600">
+          <Link href="/about" className="underline">About Planner RS</Link>
           <Link href="/privacy" className="underline">Privacy Policy</Link>
           <Link href="/terms" className="underline">Terms of Service</Link>
           <Link href="/deletion" className="underline">Data Deletion Instructions</Link>
