@@ -30,7 +30,7 @@ export default function AboutPage() {
               href="/auth/login"
               className="inline-flex rounded-md bg-[#7433dd] px-5 py-3 font-semibold text-white"
             >
-              Reviewer login
+              Sign in
             </Link>
           </div>
         </header>
