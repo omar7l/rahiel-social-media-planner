@@ -46,6 +46,9 @@ const {
 const R2 = new S3Client({
   region: 'auto',
   endpoint: `https://${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  // Browser uploads supply the bytes after signing. Do not sign an SDK-generated
+  // checksum for the empty body used to create the presigned part URL.
+  requestChecksumCalculation: 'WHEN_REQUIRED',
   credentials: {
     accessKeyId: CLOUDFLARE_ACCESS_KEY!,
     secretAccessKey: CLOUDFLARE_SECRET_ACCESS_KEY!,

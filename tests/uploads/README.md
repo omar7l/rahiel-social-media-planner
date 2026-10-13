@@ -1,0 +1,28 @@
+# Upload regression tests
+
+Run from the repository root (Node 22):
+
+```sh
+pnpm exec vitest run --config tests/uploads/vitest.config.ts
+```
+
+These tests call the production R2 signing functions with dummy credentials.
+They do not contact Cloudflare or use production accounts or databases. The
+HTTP test sends a real MP4 to a local endpoint that enforces its checksum;
+it does not emulate AWS signature authentication.
+
+`fixtures/video.mp4` is a generated, silent, one-second blue frame (64 × 64).
+Its CRC32 in base64 is `Ye4aAA==`.
+
+The AWS SDK defaults to `WHEN_SUPPORTED` checksum calculation. When signing an
+`UploadPartCommand` without a body, that generates `x-amz-checksum-crc32=AAAAAA==`
+(the checksum of zero bytes). Uppy subsequently sends the actual video bytes,
+which do not match. `WHEN_REQUIRED` avoids signing an optional empty-body
+checksum. Signed authentication, part ETags, and content-type validation remain
+in place.
+
+Local browser verification also exercised the production Uppy helper and R2
+upload handlers against an isolated, in-memory storage emulator: the old setting
+failed with `BadDigest`; the fixed setting uploaded a small MP4, a 12 MiB MP4
+in three parts, and a PNG successfully. This does not verify the live R2 bucket,
+production deployment, authentication, or database persistence.
