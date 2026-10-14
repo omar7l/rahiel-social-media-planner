@@ -7,15 +7,26 @@ warning when it plans that index, even if the rows are already unique. Its
 nonzero exit stops the application container, and Dokploy may then answer
 `404 page not found` because no running planner route remains.
 
-`prisma-db-push` now first runs `scripts/prepare-mastra-schema.cjs`. The preflight
-creates only that missing unique index. PostgreSQL verifies existing rows
+The first index-only recovery missed older runtime tables without an `attempt`
+column: it skipped them while still logging that the index was checked. This
+reproduces the second failure reported from Dokploy.
+
+`prisma-db-push` first runs `scripts/prepare-mastra-schema.cjs`. For existing
+tables, the preflight adds the nullable integer `attempt` column if absent,
+leaving all previous attempts unknown (`NULL`), then creates the unique index.
+Rows with the same experiment/item and unknown attempts remain valid.
+PostgreSQL verifies existing non-null attempts
 atomically; actual duplicates fail without deleting or modifying those rows.
+The preflight verifies the installed index definition before reporting success.
+It reports a missing table separately, rather than claiming to have checked an
+index that does not exist.
 The transaction has lock and statement timeouts and serializes concurrent
 planner preflights. Fresh installs leave table creation to Prisma. Normal
 `prisma db push` follows, with no global acceptance of data-loss warnings.
 
-Redeploy the updated GHCR image in the existing Dokploy Compose service after
-its image build succeeds. Raw Compose mode works; changing source mode is not
+Follow the [database release process](database-release-process.md) before
+promoting the tested candidate to `latest`, then redeploy the existing Dokploy
+Compose service. Raw Compose mode works; changing source mode is not
 required. Preserve the service identity, volumes, environment variables and
 domain target (`postiz`, internal port `5000`).
 
@@ -31,6 +42,7 @@ GROUP BY "experimentId", "itemId", "attempt"
 HAVING count(*) > 1;
 ```
 
-The startup fix was tested against PostgreSQL 17 with populated tables,
-duplicates, repeat startup, a missing table and an unrelated destructive-change
-warning. Production data was not accessed during these tests.
+The startup fix was tested against PostgreSQL 17 with populated tables both
+with and without `attempt`, duplicate known attempts, unknown legacy attempts,
+repeat startup, an incorrectly defined index, a missing table and an unrelated
+destructive-change warning. Production data was not accessed during these tests.
