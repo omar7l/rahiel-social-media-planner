@@ -4,6 +4,15 @@ import { fileURLToPath } from 'node:url';
 export default defineConfig({
   resolve: {
     alias: {
+      '@gitroom/frontend': fileURLToPath(
+        new URL('../../apps/frontend/src', import.meta.url)
+      ),
+      '@gitroom/helpers': fileURLToPath(
+        new URL('../../libraries/helpers/src', import.meta.url)
+      ),
+      '@gitroom/react': fileURLToPath(
+        new URL('../../libraries/react-shared-libraries/src', import.meta.url)
+      ),
       '@gitroom/nestjs-libraries': fileURLToPath(
         new URL('../../libraries/nestjs-libraries/src', import.meta.url)
       ),
