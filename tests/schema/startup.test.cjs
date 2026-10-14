@@ -88,6 +88,80 @@ test(
 );
 
 test(
+  'startup upgrades populated legacy Mastra tables without an attempt column',
+  { skip: !databaseUrl },
+  async () => {
+    const db = isolatedDb();
+    try {
+      await db.$executeRawUnsafe('TRUNCATE "mastra_experiment_results"');
+      await db.$executeRawUnsafe(
+        'DROP INDEX IF EXISTS "idx_experiment_results_exp_item_attempt"'
+      );
+      await db.$executeRawUnsafe(
+        'ALTER TABLE "mastra_experiment_results" DROP COLUMN attempt'
+      );
+      await db.$executeRawUnsafe(`
+        INSERT INTO "mastra_experiment_results"
+          (id, "experimentId", "itemId", input, "startedAt", "completedAt", "retryCount", "createdAt")
+        VALUES
+          ('legacy-1', 'experiment', 'item', '{}', now(), now(), 0, now()),
+          ('legacy-2', 'experiment', 'item', '{}', now(), now(), 0, now())
+      `);
+      const result = startup(databaseUrl);
+      assert.equal(result.status, 0, result.stdout + result.stderr);
+      assert.match(
+        result.stdout,
+        /nullable attempt added; unique index verified/
+      );
+      const rows = await db.$queryRawUnsafe(
+        'SELECT id, attempt FROM "mastra_experiment_results" ORDER BY id'
+      );
+      assert.deepEqual(rows, [
+        { id: 'legacy-1', attempt: null },
+        { id: 'legacy-2', attempt: null },
+      ]);
+      const repeated = startup(databaseUrl);
+      assert.equal(repeated.status, 0, repeated.stdout + repeated.stderr);
+    } finally {
+      await db.$disconnect();
+    }
+  }
+);
+
+test(
+  'an unexpected index definition fails explicitly and preserves rows',
+  { skip: !databaseUrl },
+  async () => {
+    const db = isolatedDb();
+    try {
+      await db.$executeRawUnsafe('TRUNCATE "mastra_experiment_results"');
+      await db.$executeRawUnsafe(
+        'DROP INDEX "idx_experiment_results_exp_item_attempt"'
+      );
+      await db.$executeRawUnsafe(`
+        CREATE INDEX "idx_experiment_results_exp_item_attempt"
+        ON "mastra_experiment_results" ("experimentId", "itemId", attempt)
+      `);
+      await db.$executeRawUnsafe(`
+        INSERT INTO "mastra_experiment_results"
+          (id, "experimentId", "itemId", input, "startedAt", "completedAt", "retryCount", "createdAt", attempt)
+        VALUES ('unexpected-index', 'experiment', 'item', '{}', now(), now(), 0, now(), 1)
+      `);
+      const result = startup(databaseUrl);
+      assert.equal(result.status, 1, result.stdout + result.stderr);
+      assert.match(result.stderr, /unexpected definition/);
+      assert.doesNotMatch(result.stdout, /unique index verified/);
+      assert.deepEqual(
+        await db.$queryRawUnsafe('SELECT id FROM "mastra_experiment_results"'),
+        [{ id: 'unexpected-index' }]
+      );
+    } finally {
+      await db.$disconnect();
+    }
+  }
+);
+
+test(
   'fresh installs work when the Mastra table does not exist',
   {
     skip: !databaseUrl,

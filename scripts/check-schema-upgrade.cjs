@@ -36,7 +36,7 @@ async function snapshot(db) {
     comment: 'SELECT id, content FROM "Comments" ORDER BY id',
     tag: 'SELECT "postId", "tagId" FROM "TagsPosts" ORDER BY "postId", "tagId"',
     experiment:
-      'SELECT id, "experimentId", "itemId", attempt FROM mastra_experiment_results ORDER BY id',
+      'SELECT id, "experimentId", "itemId", input FROM mastra_experiment_results ORDER BY id',
   };
   const result = {};
   for (const [name, sql] of Object.entries(queries))
@@ -78,11 +78,13 @@ async function check() {
       `CREATE TABLE IF NOT EXISTS mastra_experiment_results (
         id text PRIMARY KEY, "experimentId" text NOT NULL, "itemId" text NOT NULL,
         input jsonb NOT NULL, "startedAt" timestamp NOT NULL, "completedAt" timestamp NOT NULL,
-        "retryCount" integer NOT NULL, "createdAt" timestamp NOT NULL, attempt integer
+        "retryCount" integer NOT NULL, "createdAt" timestamp NOT NULL
       )`,
-      // Model the runtime-created table that caused the October restart loop.
+      // Model the older runtime-created table, including the missing column
+      // that made the first index-only recovery incorrectly skip this upgrade.
       `DROP INDEX IF EXISTS idx_experiment_results_exp_item_attempt`,
-      `INSERT INTO mastra_experiment_results (id, "experimentId", "itemId", input, "startedAt", "completedAt", "retryCount", "createdAt", attempt) VALUES ('test-experiment', 'fixture', 'item', '{}', now(), now(), 0, now(), 1)`,
+      `ALTER TABLE mastra_experiment_results DROP COLUMN IF EXISTS attempt`,
+      `INSERT INTO mastra_experiment_results (id, "experimentId", "itemId", input, "startedAt", "completedAt", "retryCount", "createdAt") VALUES ('test-experiment', 'fixture', 'item', '{}', now(), now(), 0, now())`,
     ];
     for (const sql of seed) await db.$executeRawUnsafe(sql);
     const before = await snapshot(db);
@@ -91,6 +93,11 @@ async function check() {
       await snapshot(db),
       before,
       'The database upgrade changed existing fixture data.'
+    );
+    assert.deepEqual(
+      await db.$queryRawUnsafe('SELECT attempt FROM mastra_experiment_results'),
+      [{ attempt: null }],
+      'The upgrade must leave unknown legacy attempts null.'
     );
     console.log(
       'Populated database upgrade passed; fixture records were preserved.'
