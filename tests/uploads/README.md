@@ -14,6 +14,14 @@ it does not emulate AWS signature authentication.
 `fixtures/video.mp4` is a generated, silent, one-second blue frame (64 × 64).
 Its CRC32 in base64 is `Ye4aAA==`.
 
+`fixtures/iphone.mov` is a generated, silent, one-second blue frame (64 × 96),
+encoded as H.264 in a QuickTime container (`video/quicktime`). It contains no
+user media. The uploader test runs the production React hook and Uppy
+preprocessors with no converter configured. Storage tests exercise real byte
+sniffing, multipart completion, buffered uploads, and streaming uploads to local
+storage and R2 (with only SDK network calls mocked). They cover uppercase MOV
+names, ISO MP4-branded MOV files, and rejection/cleanup of disguised content.
+
 The AWS SDK defaults to `WHEN_SUPPORTED` checksum calculation. When signing an
 `UploadPartCommand` without a body, that generates `x-amz-checksum-crc32=AAAAAA==`
 (the checksum of zero bytes). Uppy subsequently sends the actual video bytes,

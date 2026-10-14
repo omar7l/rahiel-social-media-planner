@@ -93,12 +93,15 @@ export function useUppyUploader(props: {
           if (type === 'video/*') {
             return ['video/mp4', 'video/mpeg', 'video/quicktime'];
           }
-          // the normalizer turns QuickTime into mp4, nothing else is accepted by the bucket
-          if (type === 'video/mp4' && mediaProcessing) {
-            return ['video/mp4', 'video/quicktime'];
-          }
-          if (type === 'video/mp4' && transloadit && transloadit.length > 0) {
-            return ['video/mp4', 'video/mpeg', 'video/quicktime'];
+          // iPhone MOV uploads are valid without an optional conversion service.
+          if (type === 'video/mp4') {
+            return [
+              'video/mp4',
+              'video/quicktime',
+              ...(!mediaProcessing && transloadit && transloadit.length > 0
+                ? ['video/mpeg']
+                : []),
+            ];
           }
           return [type];
         });
