@@ -36,7 +36,7 @@ compilation. Database checks must pass before this build can publish anything.
 ## Database changes cannot silently move latest
 
 After checks pass, an image is published under its exact Git SHA. Changes to the
-database schema, database code, startup preparation, dependencies or lockfile
+database schema, database code, SQL files, container startup, dependencies or lockfile
 require explicit review before that image can also become `latest`.
 
 For a held database release:

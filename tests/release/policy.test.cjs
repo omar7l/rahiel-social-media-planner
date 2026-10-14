@@ -61,6 +61,8 @@ test('database startup and dependency changes also require review', () => {
   );
   assert.equal(requiresDatabaseReview('', ['package.json']), true);
   assert.equal(requiresDatabaseReview('', ['pnpm-lock.yaml']), true);
+  assert.equal(requiresDatabaseReview('', ['Dockerfile.dev']), true);
+  assert.equal(requiresDatabaseReview('', ['migrations/new-index.sql']), true);
   assert.equal(
     requiresDatabaseReview('', [
       'apps/frontend/src/components/media/new.uploader.tsx',

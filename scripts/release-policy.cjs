@@ -30,6 +30,9 @@ function requiresDatabaseReview(sql, paths) {
       (path) =>
         path === 'package.json' ||
         path === 'pnpm-lock.yaml' ||
+        path === 'Dockerfile.dev' ||
+        path.endsWith('.sql') ||
+        path.startsWith('var/docker/') ||
         path.startsWith('libraries/nestjs-libraries/src/database/') ||
         path.startsWith('scripts/prepare-')
     )
