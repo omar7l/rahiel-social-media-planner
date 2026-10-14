@@ -1,0 +1,93 @@
+name: Database upgrade checks
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      baseline_ref:
+        description: Git SHA of the baseline schema
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      baseline_ref:
+        required: true
+        type: string
+      database_reviewed:
+        type: boolean
+        default: false
+      backup_confirmed:
+        type: boolean
+        default: false
+    outputs:
+      publish_latest:
+        value: ${{ jobs.upgrade.outputs.publish_latest }}
+      database_review_required:
+        value: ${{ jobs.upgrade.outputs.database_review_required }}
+
+permissions:
+  contents: read
+
+jobs:
+  upgrade:
+    name: Upgrade a populated PostgreSQL database
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      publish_latest: ${{ steps.policy.outputs.publish_latest }}
+      database_review_required: ${{ steps.policy.outputs.database_review_required }}
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: planner_schema_test
+          POSTGRES_USER: planner_test
+          POSTGRES_PASSWORD: local-test-password
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U planner_test -d planner_schema_test"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      DATABASE_URL: postgresql://planner_test:local-test-password@127.0.0.1:5432/planner_schema_test
+      SCHEMA_TEST_DATABASE_URL: postgresql://planner_test:local-test-password@127.0.0.1:5432/planner_schema_test
+      SCHEMA_PATH: libraries/nestjs-libraries/src/database/prisma/schema.prisma
+      BASELINE_REF: ${{ inputs.baseline_ref || github.event.pull_request.base.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.6.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.20.0'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Export baseline and database SQL report
+        run: |
+          [[ "$BASELINE_REF" =~ ^[a-f0-9]{40}$ ]]
+          mkdir -p tmp/release-check
+          git show "$BASELINE_REF:$SCHEMA_PATH" > tmp/release-check/baseline.prisma
+          pnpm exec prisma validate --schema "$SCHEMA_PATH"
+          pnpm exec prisma migrate diff --from-schema-datamodel tmp/release-check/baseline.prisma --to-schema-datamodel "$SCHEMA_PATH" --script > tmp/release-check/schema-diff.sql
+      - name: Assess database review requirements
+        id: policy
+        env:
+          DATABASE_REVIEWED: ${{ inputs.database_reviewed || false }}
+          BACKUP_CONFIRMED: ${{ inputs.backup_confirmed || false }}
+        run: node scripts/release-policy.cjs assess tmp/release-check/schema-diff.sql "$BASELINE_REF"
+      - name: Upgrade baseline with existing application and AI records
+        run: node scripts/check-schema-upgrade.cjs tmp/release-check/baseline.prisma
+      - name: Check restart, duplicates, fresh installs and data-loss protection
+        run: node --test tests/schema/startup.test.cjs tests/release/policy.test.cjs
+      - name: Check upload regressions
+        run: pnpm exec vitest run --config tests/uploads/vitest.config.ts
+      - name: Attach schema review report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: database-upgrade-report
+          path: tmp/release-check/*.sql
+          if-no-files-found: ignore

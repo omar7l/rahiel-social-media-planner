@@ -15,3 +15,7 @@ node --test tests/schema/startup.test.cjs
 The tests modify this disposable database. They cover the exact startup command,
 idempotence, duplicate-row preservation, fresh tables and refusal to accept an
 unrelated populated-column deletion. They skip when the test URL is unset.
+
+CI also runs `scripts/check-schema-upgrade.cjs` against an empty test database,
+using the last published image's schema and synthetic application/AI records.
+See [the release process](../../docs/database-release-process.md).

@@ -2,12 +2,18 @@ name: Publish Docker image
 
 on:
   workflow_dispatch:
+    inputs:
+      database_reviewed:
+        description: Reviewed the database SQL report and tested this upgrade
+        type: boolean
+        default: false
+      backup_confirmed:
+        description: Confirmed a restorable backup of the deployed database
+        type: boolean
+        default: false
   push:
-    branches:
-      - main
-    paths-ignore:
-      - '**/*.md'
-      - 'docs/**'
+    branches: [main]
+    paths-ignore: ['**/*.md', 'docs/**']
 
 permissions:
   contents: read
@@ -21,35 +27,74 @@ env:
   IMAGE_NAME: ghcr.io/omar7l/rahiel-social-media-planner
 
 jobs:
-  publish:
-    name: Build and publish Rahiel planner image
+  baseline:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    outputs:
+      revision: ${{ steps.released.outputs.revision }}
     steps:
-      - name: Checkout fork
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to GHCR
-        uses: docker/login-action@v3
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Identify the image actually tagged latest
+        id: released
+        run: |
+          docker buildx imagetools inspect "$IMAGE_NAME:latest" --format '{{json .Image}}' > released-image.json
+          revision=$(node scripts/release-policy.cjs image-revision released-image.json)
+          echo "revision=$revision" >> "$GITHUB_OUTPUT"
 
-      - name: Build and push image
+  database:
+    needs: baseline
+    uses: ./.github/workflows/database-upgrade-checks.yml
+    with:
+      baseline_ref: ${{ needs.baseline.outputs.revision }}
+      database_reviewed: ${{ inputs.database_reviewed || false }}
+      backup_confirmed: ${{ inputs.backup_confirmed || false }}
+
+  publish:
+    name: Publish tested candidate; gate latest on database review
+    needs: database
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push candidate image
+        id: build
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile.dev
           push: true
-          build-args: |
-            NEXT_PUBLIC_VERSION=rahiel-${{ github.sha }}
-          tags: |
-            ${{ env.IMAGE_NAME }}:latest
-            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          build-args: NEXT_PUBLIC_VERSION=rahiel-${{ github.sha }}
+          tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           provenance: false
           sbom: false
+      - name: Promote the tested digest to latest
+        if: needs.database.outputs.publish_latest == 'true'
+        env:
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+        run: docker buildx imagetools create --prefer-index=false --tag "$IMAGE_NAME:latest" "$IMAGE_NAME@$IMAGE_DIGEST"
+      - name: Explain the release result
+        env:
+          PUBLISH_LATEST: ${{ needs.database.outputs.publish_latest }}
+        run: |
+          echo "## Image release" >> "$GITHUB_STEP_SUMMARY"
+          echo "Candidate: \`$IMAGE_NAME:$GITHUB_SHA\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "Updated latest: **$PUBLISH_LATEST**" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$PUBLISH_LATEST" != true ]; then
+            echo "::warning::Database review required. Candidate built, but latest was NOT changed. Review the SQL artifact and backup, then manually run this workflow with both confirmations."
+          fi
