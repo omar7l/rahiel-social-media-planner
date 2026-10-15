@@ -10,6 +10,7 @@ import {
 } from '@gitroom/frontend/components/new-launch/providers/high.order.provider';
 import { TikTokDto } from '@gitroom/nestjs-libraries/dtos/posts/providers-settings/tiktok.dto';
 import { useSettings } from '@gitroom/frontend/components/launches/helpers/use.values';
+import { isVideoFile } from '@gitroom/helpers/utils/is.video.file';
 import { Select } from '@gitroom/react/form/select';
 import { Checkbox } from '@gitroom/react/form/checkbox';
 import clsx from 'clsx';
@@ -32,7 +33,7 @@ const TikTokSettings: FC<{
   const isBusiness = integration?.identifier === 'tiktok-business';
 
   const isTitle = useMemo(() => {
-    return value?.[0]?.image?.some((p) => (p?.path?.indexOf?.('mp4') ?? -1) === -1);
+    return value?.[0]?.image?.some((p) => !isVideoFile(p?.path));
   }, [value]);
 
   const hasMedia = (value?.[0]?.image?.length ?? 0) > 0;
