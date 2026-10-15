@@ -3,6 +3,7 @@ import {
   ValidatorConstraintInterface,
   ValidatorConstraint,
 } from 'class-validator';
+import { isVideoFile } from './is.video.file';
 
 @ValidatorConstraint({ name: 'checkValidExtension', async: false })
 export class ValidUrlExtension implements ValidatorConstraintInterface {
@@ -13,14 +14,14 @@ export class ValidUrlExtension implements ValidatorConstraintInterface {
       !!text?.split?.('?')?.[0].endsWith('.jpeg') ||
       !!text?.split?.('?')?.[0].endsWith('.gif') ||
       !!text?.split?.('?')?.[0].endsWith('.webp') ||
-      !!text?.split?.('?')?.[0].endsWith('.mp4')
+      isVideoFile(text)
     );
   }
 
   defaultMessage(args: ValidationArguments) {
     // here you can provide default error message if validation failed
     return (
-      'File must have a valid extension: .png, .jpg, .jpeg, .gif, .webp, or .mp4'
+      'File must have a valid extension: .png, .jpg, .jpeg, .gif, .webp, .mp4, or .mov'
     );
   }
 }

@@ -4,7 +4,7 @@ import { useFormContext } from 'react-hook-form';
 import { useVideo } from '@gitroom/frontend/components/videos/video.context.wrapper';
 import { Textarea } from '@gitroom/react/form/textarea';
 import { MultiMediaComponent } from '@gitroom/frontend/components/media/media.component';
-import { hasExtension } from '@gitroom/helpers/utils/has.extension';
+import { isVideoFile } from '@gitroom/helpers/utils/is.video.file';
 
 export interface Voice {
   id: string;
@@ -47,7 +47,7 @@ const SeedanceSettings: FC = () => {
           setValue(
             'images',
             val.target.value
-              .filter((f) => !hasExtension(f.path, 'mp4'))
+              .filter((f) => !isVideoFile(f.path))
               .slice(0, 3)
           )
         }

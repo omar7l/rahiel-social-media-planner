@@ -34,3 +34,11 @@ upload handlers against an isolated, in-memory storage emulator: the old setting
 failed with `BadDigest`; the fixed setting uploaded a small MP4, a 12 MiB MP4
 in three parts, and a PNG successfully. This does not verify the live R2 bucket,
 production deployment, authentication, or database persistence.
+
+Preview regressions render the production media-library component and shared
+post preview. They check MOV video cards, image/video picker filtering, existing
+MP4/image rendering, and URL classification without relying on query strings.
+Attachment DTO tests verify that uploaded MOV files can be used in posts while
+unsupported extensions and configured upload-domain restrictions remain enforced.
+Native video playback still depends on the browser supporting the file's codec;
+these checks do not transcode HEVC videos.
