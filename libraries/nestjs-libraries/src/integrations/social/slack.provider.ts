@@ -1,3 +1,4 @@
+import { isVideoFile } from '@gitroom/helpers/utils/is.video.file';
 import {
   AuthTokenDetails,
   PostDetails,
@@ -38,7 +39,7 @@ export class SlackProvider extends SocialAbstract implements SocialProvider {
     posts: Array<ValidityMedia[]>
   ): Promise<string | true> {
     const hasVideo = posts?.some((post) =>
-      post?.some((item) => (item?.path?.indexOf?.('mp4') ?? -1) > -1)
+      post?.some((item) => isVideoFile(item?.path))
     );
     if (hasVideo) {
       return 'No video support for Slack, only images';

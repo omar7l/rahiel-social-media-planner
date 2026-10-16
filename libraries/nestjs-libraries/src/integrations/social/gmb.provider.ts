@@ -1,3 +1,4 @@
+import { isVideoFile } from '@gitroom/helpers/utils/is.video.file';
 import {
   AnalyticsData,
   AuthTokenDetails,
@@ -67,7 +68,7 @@ export class GmbProvider extends SocialAbstract implements SocialProvider {
     // Check for video - GMB doesn't support video in local posts
     if ((items?.length ?? 0) > 0 && (items?.[0]?.length ?? 0) > 0) {
       const media = items?.[0]?.[0];
-      if ((media?.path?.indexOf?.('mp4') ?? -1) > -1) {
+      if (isVideoFile(media?.path)) {
         return 'Google My Business posts do not support video attachments';
       }
     }

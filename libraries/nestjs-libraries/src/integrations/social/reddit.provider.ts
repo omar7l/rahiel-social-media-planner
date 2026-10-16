@@ -19,7 +19,7 @@ import { lookup } from 'mime-types';
 import FormDataUpload from 'form-data';
 import { Tool } from '@gitroom/nestjs-libraries/integrations/tool.decorator';
 import { Integration } from '@prisma/client';
-import { hasExtension } from '@gitroom/helpers/utils/has.extension';
+import { isVideoFile } from '@gitroom/helpers/utils/is.video.file';
 
 // Travels through the workflow history between postPending, checkPostStatus
 // and finalizePost. The cursor makes every subreddit submit its own
@@ -80,7 +80,7 @@ export class RedditProvider extends SocialAbstract implements SocialProvider {
 
     if (
       posts?.some((p) =>
-        p?.some((a) => !a?.thumbnail && (a?.path?.indexOf?.('mp4') ?? -1) > -1)
+        p?.some((a) => !a?.thumbnail && isVideoFile(a?.path))
       )
     ) {
       return 'You must attach a thumbnail to your video post.';
@@ -471,7 +471,7 @@ export class RedditProvider extends SocialAbstract implements SocialProvider {
     const value = entry.value;
     const kind =
       value.type === 'media'
-        ? hasExtension(data.mediaPath || '', 'mp4')
+        ? isVideoFile(data.mediaPath || '')
           ? 'video'
           : 'image'
         : value.type;
@@ -492,7 +492,7 @@ export class RedditProvider extends SocialAbstract implements SocialProvider {
       ...(value.type === 'media'
         ? {
             url: await this.uploadFileToReddit(accessToken, data.mediaPath!),
-            ...(hasExtension(data.mediaPath || '', 'mp4')
+            ...(isVideoFile(data.mediaPath || '')
               ? {
                   video_poster_url: await this.uploadFileToReddit(
                     accessToken,

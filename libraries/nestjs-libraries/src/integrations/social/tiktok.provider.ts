@@ -17,7 +17,8 @@ import {
 } from '@gitroom/nestjs-libraries/integrations/social.abstract';
 import { TikTokDto } from '@gitroom/nestjs-libraries/dtos/posts/providers-settings/tiktok.dto';
 import { timer } from '@gitroom/helpers/utils/timer';
-import { hasExtension } from '@gitroom/helpers/utils/has.extension';
+import { isVideoFile } from '@gitroom/helpers/utils/is.video.file';
+import { lookup } from 'mime-types';
 import { createReadStream } from 'fs';
 import { getSsrfSafeDispatcher } from '@gitroom/nestjs-libraries/dtos/webhooks/ssrf.safe.dispatcher';
 import { Integration } from '@prisma/client';
@@ -60,19 +61,19 @@ export class TiktokProvider extends SocialAbstract implements SocialProvider {
     }
     if (
       (firstItems?.length ?? 0) > 1 &&
-      firstItems?.some((p) => (p?.path?.indexOf?.('mp4') ?? -1) > -1)
+      firstItems?.some((p) => isVideoFile(p?.path))
     ) {
       return 'Only pictures are supported when selecting multiple items';
     } else if (
       firstItems?.length !== 1 &&
-      (firstItems?.[0]?.path?.indexOf?.('mp4') ?? -1) > -1
+      isVideoFile(firstItems?.[0]?.path)
     ) {
       return 'You need one media';
     }
 
     // TikTok fails the whole photo post when a single image is oversized, and
     // the status only says `picture_size_check_failed` without naming it.
-    if (firstItems?.every((p) => (p?.path?.indexOf?.('mp4') ?? -1) === -1)) {
+    if (firstItems?.every((p) => !isVideoFile(p?.path))) {
       const dimensions = await Promise.all(
         firstItems?.map((p) => this.getImageDimensions(p?.path)) ?? []
       );
@@ -560,7 +561,7 @@ export class TiktokProvider extends SocialAbstract implements SocialProvider {
   }
 
   private buildTikokPostInfoBody(firstPost: PostDetails<TikTokDto>) {
-    const isPhoto = !hasExtension(firstPost?.media?.[0]?.path, 'mp4');
+    const isPhoto = !isVideoFile(firstPost?.media?.[0]?.path);
     const method = this.contentPostingMethod(firstPost);
 
     if (method === 'DIRECT_POST') {
@@ -815,7 +816,7 @@ export class TiktokProvider extends SocialAbstract implements SocialProvider {
     firstPost: PostDetails<TikTokDto>,
     videoSize?: number
   ) {
-    const isPhoto = !hasExtension(firstPost?.media?.[0]?.path, 'mp4');
+    const isPhoto = !isVideoFile(firstPost?.media?.[0]?.path);
 
     // TikTok photo posts only support PULL_FROM_URL, there is no FILE_UPLOAD
     // path for photos, so this branch keeps pulling from the URL.
@@ -853,7 +854,7 @@ export class TiktokProvider extends SocialAbstract implements SocialProvider {
     integration: Integration
   ): Promise<PostResponse[]> {
     const [firstPost] = postDetails;
-    const isPhoto = !hasExtension(firstPost?.media?.[0]?.path, 'mp4');
+    const isPhoto = !isVideoFile(firstPost?.media?.[0]?.path);
     const videoPath = firstPost?.media?.[0]?.path!;
 
     // For videos we only need the total size up front (HEAD / statSync) so we
@@ -892,7 +893,7 @@ export class TiktokProvider extends SocialAbstract implements SocialProvider {
           upload_url,
           videoPath,
           videoSize,
-          'video/mp4'
+          lookup(videoPath.split(/[?#]/, 1)[0]) || 'video/mp4'
         );
       } catch (err) {
         // An explicit rejection from TikTok: the post won't publish, fail it

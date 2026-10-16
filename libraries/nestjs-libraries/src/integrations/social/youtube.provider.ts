@@ -1,3 +1,4 @@
+import { isVideoFile } from '@gitroom/helpers/utils/is.video.file';
 import {
   AnalyticsData,
   AuthTokenDetails,
@@ -24,6 +25,7 @@ import { createReadStream, statSync } from 'fs';
 import { getSsrfSafeDispatcher } from '@gitroom/nestjs-libraries/dtos/webhooks/ssrf.safe.dispatcher';
 import { setHeartbeatDetails } from '@gitroom/nestjs-libraries/temporal/temporal.heartbeat';
 import { Rules } from '@gitroom/nestjs-libraries/chat/rules.description.decorator';
+import { lookup } from 'mime-types';
 
 const clientAndYoutube = () => {
   const client = new google.auth.OAuth2({
@@ -83,7 +85,7 @@ export class YoutubeProvider extends SocialAbstract implements SocialProvider {
     if (items?.[0]?.length !== 1) {
       return 'You need one media';
     }
-    if ((firstItems?.[0]?.path?.indexOf?.('mp4') ?? -1) === -1) {
+    if (!isVideoFile(firstItems?.[0]?.path)) {
       return 'Item must be a video';
     }
     return true;
@@ -592,7 +594,7 @@ export class YoutubeProvider extends SocialAbstract implements SocialProvider {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json; charset=UTF-8',
-          'X-Upload-Content-Type': 'video/mp4',
+          'X-Upload-Content-Type': lookup(path.split(/[?#]/, 1)[0]) || 'video/mp4',
           'X-Upload-Content-Length': String(videoSize),
         },
         body: JSON.stringify({
@@ -742,7 +744,8 @@ export class YoutubeProvider extends SocialAbstract implements SocialProvider {
             method: 'PUT',
             headers: {
               Authorization: `Bearer ${accessToken}`,
-              'Content-Type': 'video/mp4',
+              'Content-Type':
+                lookup(pendingData.path.split(/[?#]/, 1)[0]) || 'video/mp4',
               'Content-Length': String(end - uploaded + 1),
               'Content-Range': `bytes ${uploaded}-${end}/${pendingData.videoSize}`,
             },
