@@ -83,7 +83,9 @@ jobs:
       - name: Check restart, duplicates, fresh installs and data-loss protection
         run: node --test tests/schema/startup.test.cjs tests/release/policy.test.cjs
       - name: Check upload regressions
-        run: pnpm exec vitest run --config tests/uploads/vitest.config.ts
+        run: |
+          command -v ffmpeg || (sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg)
+          pnpm exec vitest run --config tests/uploads/vitest.config.ts
       - name: Attach schema review report
         if: always()
         uses: actions/upload-artifact@v4
