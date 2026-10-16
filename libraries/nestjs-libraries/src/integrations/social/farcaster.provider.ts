@@ -1,3 +1,4 @@
+import { isVideoFile } from '@gitroom/helpers/utils/is.video.file';
 import {
   AuthTokenDetails,
   PostDetails,
@@ -59,7 +60,7 @@ export class FarcasterProvider
   ): Promise<string | true> {
     if (
       list?.some((item) =>
-        item?.some((field) => (field?.path?.indexOf?.('mp4') ?? -1) > -1)
+        item?.some((field) => isVideoFile(field?.path))
       )
     ) {
       return 'Can only accept images';

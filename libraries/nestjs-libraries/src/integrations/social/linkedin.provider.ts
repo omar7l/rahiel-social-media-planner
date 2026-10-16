@@ -1,3 +1,4 @@
+import { isVideoFile } from '@gitroom/helpers/utils/is.video.file';
 import {
   AuthTokenDetails,
   PendingCheckResponse,
@@ -87,14 +88,14 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
     if (
       this.assetBoolean(vals?.post_as_images_carousel) &&
       ((firstPost?.length ?? 0) < 2 ||
-        firstPost?.some((p) => (p?.path?.indexOf?.('mp4') ?? -1) > -1))
+        firstPost?.some((p) => isVideoFile(p?.path)))
     ) {
       return 'Carousel can only be created with 2 or more images and no videos.';
     }
 
     if (
       (firstPost?.length ?? 0) > 1 &&
-      firstPost?.some((p) => (p?.path?.indexOf?.('mp4') ?? -1) > -1)
+      firstPost?.some((p) => isVideoFile(p?.path))
     ) {
       return 'Can have maximum 1 media when selecting a video.';
     }
@@ -304,7 +305,7 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
     grace?: boolean;
   }> {
     // Determine the appropriate endpoint based on file type
-    const isVideo = hasExtension(fileName, 'mp4');
+    const isVideo = isVideoFile(fileName);
     const isPdf = hasExtension(fileName, 'pdf');
 
     const fileSizeBytes = Buffer.isBuffer(picture)
@@ -615,7 +616,7 @@ export class LinkedinProvider extends SocialAbstract implements SocialProvider {
           Buffer.isBuffer(media.buffer)
         ) {
           mediaBuffer = (media as any).buffer;
-        } else if (hasExtension(media.path, 'mp4')) {
+        } else if (isVideoFile(media.path)) {
           // Videos are never buffered: uploadPicture streams them from the
           // source chunk-by-chunk.
           mediaBuffer = { path: media.path };

@@ -34,7 +34,7 @@ import { Plug } from '@gitroom/helpers/decorators/plug.decorator';
 import { timer } from '@gitroom/helpers/utils/timer';
 import { stripHtmlValidation } from '@gitroom/helpers/utils/strip.html.validation';
 import { Rules } from '@gitroom/nestjs-libraries/chat/rules.description.decorator';
-import { hasExtension } from '@gitroom/helpers/utils/has.extension';
+import { isVideoFile } from '@gitroom/helpers/utils/is.video.file';
 
 async function reduceImageBySize(url: string, maxSizeKB = 976) {
   try {
@@ -251,7 +251,7 @@ export class BlueskyProvider extends SocialAbstract implements SocialProvider {
     if (
       posts?.some(
         (p) =>
-          p?.some((a) => (a?.path?.indexOf?.('mp4') ?? -1) > -1) &&
+          p?.some((a) => isVideoFile(a?.path)) &&
           (p?.length ?? 0) > 1
       )
     ) {
@@ -398,9 +398,9 @@ export class BlueskyProvider extends SocialAbstract implements SocialProvider {
   ): Promise<{ embed: any; images: any[] }> {
     // Separate images and videos
     const imageMedia =
-      post.media?.filter((p) => !hasExtension(p.path, 'mp4')) || [];
+      post.media?.filter((p) => !isVideoFile(p.path)) || [];
     const videoMedia =
-      post.media?.filter((p) => hasExtension(p.path, 'mp4')) || [];
+      post.media?.filter((p) => isVideoFile(p.path)) || [];
 
     // Upload images
     const images = await Promise.all(
@@ -452,7 +452,7 @@ export class BlueskyProvider extends SocialAbstract implements SocialProvider {
   ): Promise<PostResponse[]> {
     const [firstPost] = postDetails;
     const videoMedia =
-      firstPost.media?.filter((p) => hasExtension(p.path, 'mp4')) || [];
+      firstPost.media?.filter((p) => isVideoFile(p.path)) || [];
 
     // Only the video has an asynchronous processing step: start its upload job
     // now, the wait moves to checkPostStatus. Images are uploaded by

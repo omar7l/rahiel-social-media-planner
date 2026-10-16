@@ -15,7 +15,7 @@ import { createHash, randomBytes } from 'crypto';
 import FormDataNew from 'form-data';
 import mime from 'mime-types';
 import { Integration } from '@prisma/client';
-import { hasExtension } from '@gitroom/helpers/utils/has.extension';
+import { isVideoFile } from '@gitroom/helpers/utils/is.video.file';
 
 export class VkProvider extends SocialAbstract implements SocialProvider {
   override maxConcurrentJob = 5; // VK limits are per user token
@@ -172,7 +172,7 @@ export class VkProvider extends SocialAbstract implements SocialProvider {
       (post?.media || []).map(async (media) => {
         const all = await (
           await this.fetch(
-            hasExtension(media.path, 'mp4')
+            isVideoFile(media.path)
               ? `https://api.vk.com/method/video.save?access_token=${accessToken}&v=5.251`
               : `https://api.vk.com/method/photos.getWallUploadServer?owner_id=${userId}&access_token=${accessToken}&v=5.251`
           )
@@ -201,7 +201,7 @@ export class VkProvider extends SocialAbstract implements SocialProvider {
           )
         ).data;
 
-        if (hasExtension(media.path, 'mp4')) {
+        if (isVideoFile(media.path)) {
           return {
             id: all.response.video_id,
             type: 'video',

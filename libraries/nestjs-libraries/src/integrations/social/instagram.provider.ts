@@ -20,7 +20,7 @@ import { Integration } from '@prisma/client';
 import { Rules } from '@gitroom/nestjs-libraries/chat/rules.description.decorator';
 import { META_GRAPH_API_VERSION } from '@gitroom/nestjs-libraries/integrations/social/facebook.provider';
 import { Tool } from '@gitroom/nestjs-libraries/integrations/tool.decorator';
-import { hasExtension } from '@gitroom/helpers/utils/has.extension';
+import { isVideoFile } from '@gitroom/helpers/utils/is.video.file';
 
 @Rules(
   "Instagram should have at least one attachment, if it's a story, it can have only one picture"
@@ -64,7 +64,7 @@ export class InstagramProvider
         return 'Trial Reels can only have one video';
       }
       const hasVideo = firstPost?.some(
-        (f) => (f?.path?.indexOf?.('mp4') ?? -1) > -1
+        (f) => isVideoFile(f?.path)
       );
       if (!hasVideo) {
         return 'Trial Reels must be a video';
@@ -78,7 +78,7 @@ export class InstagramProvider
         return 'Audio can only be added to a single video Reel';
       }
       const hasVideo = firstPost?.some(
-        (f) => (f?.path?.indexOf?.('mp4') ?? -1) > -1
+        (f) => isVideoFile(f?.path)
       );
       if (!hasVideo) {
         return 'Audio can only be added to a video Reel';
@@ -732,7 +732,7 @@ export class InstagramProvider
           (firstPost?.media?.length || 0) > 1 && !isStory
             ? `&is_carousel_item=true`
             : ``;
-        const mediaType = hasExtension(m.path, 'mp4')
+        const mediaType = isVideoFile(m.path)
           ? firstPost?.media?.length === 1
             ? isStory
               ? `video_url=${m.path}&media_type=STORIES`
@@ -773,7 +773,7 @@ export class InstagramProvider
           type === 'graph.facebook.com' &&
           !isStory &&
           firstPost?.media?.length === 1 &&
-          hasExtension(m.path, 'mp4')
+          isVideoFile(m.path)
             ? `&audio_configuration=${encodeURIComponent(
                 JSON.stringify({
                   audio_id: firstPost.settings.audio.id,

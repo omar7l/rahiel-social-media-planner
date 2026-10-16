@@ -1,3 +1,4 @@
+import { isVideoFile } from '@gitroom/helpers/utils/is.video.file';
 import {
   AnalyticsData,
   AuthTokenDetails,
@@ -33,13 +34,13 @@ export class DribbbleProvider extends SocialAbstract implements SocialProvider {
     string | true
   > {
     const isMp4 = firstItem?.find(
-      (item) => (item?.path?.indexOf?.('mp4') ?? -1) > -1
+      (item) => isVideoFile(item?.path)
     );
     if (firstItem?.length !== 1) {
       return 'Requires one item';
     }
     if (isMp4) {
-      return 'Does not support mp4 files';
+      return 'Does not support video files';
     }
     const details = await this.getImageDimensions(firstItem?.[0]?.path);
     if (

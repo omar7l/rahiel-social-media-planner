@@ -42,3 +42,11 @@ Attachment DTO tests verify that uploaded MOV files can be used in posts while
 unsupported extensions and configured upload-domain restrictions remain enforced.
 Native video playback still depends on the browser supporting the file's codec;
 these checks do not transcode HEVC videos.
+
+Social-publishing regressions invoke the real provider methods with outgoing
+platform requests intercepted: TikTok video initialization and QuickTime part
+bytes, TikTok Business video requests, Instagram Reels parameters, and YouTube
+resumable-upload MIME types. A validation matrix checks MOV against the existing
+video restrictions, including image-only services. These tests do not publish
+live social posts and do not guarantee every codec/profile is accepted by every
+platform.
