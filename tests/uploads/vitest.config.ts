@@ -5,6 +5,9 @@ export default defineConfig({
   esbuild: { jsx: 'automatic' },
   resolve: {
     alias: {
+      '@gitroom/backend': fileURLToPath(
+        new URL('../../apps/backend/src', import.meta.url)
+      ),
       '@gitroom/frontend': fileURLToPath(
         new URL('../../apps/frontend/src', import.meta.url)
       ),

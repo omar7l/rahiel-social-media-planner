@@ -80,6 +80,20 @@ export const getTemporalModule = (
                   },
                 };
               }),
+            // Thumbnail decoding has its own queue so it cannot occupy social
+            // publishing slots. One decoder per worker, at most one new job/s
+            // across the queue; FFmpeg itself uses at most two decoder threads.
+            ...(!excludeQueues.includes('video-thumbnails')
+              ? [{
+                  taskQueue: 'video-thumbnails',
+                  activityClasses: activityClasses!,
+                  autoStart: true,
+                  workerOptions: {
+                    maxConcurrentActivityTaskExecutions: 1,
+                    maxTaskQueueActivitiesPerSecond: 1,
+                  },
+                }]
+              : []),
             // Activity-only Workers for emails, rate limited server side
             // across all workers to stay under the Resend limit
             ...Object.values(emailQueues)

@@ -1,5 +1,6 @@
 import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
 import { MediaRepository } from '@gitroom/nestjs-libraries/database/prisma/media/media.repository';
+import { MediaThumbnailService } from './media.thumbnail.service';
 import { OpenaiService } from '@gitroom/nestjs-libraries/openai/openai.service';
 import { generationError } from '@gitroom/nestjs-libraries/openai/generation.error';
 import { SubscriptionService } from '@gitroom/nestjs-libraries/database/prisma/subscriptions/subscription.service';
@@ -91,7 +92,8 @@ export class MediaService {
     private _openAi: OpenaiService,
     private _subscriptionService: SubscriptionService,
     private _videoManager: VideoManager,
-    private _temporalService: TemporalService
+    private _temporalService: TemporalService,
+    private _thumbnails: MediaThumbnailService
   ) {}
 
   async deleteMedia(org: string, id: string) {
@@ -163,18 +165,20 @@ export class MediaService {
     return this.saveFile(org, uploaded.originalname, uploaded.path);
   }
 
-  saveFile(
+  async saveFile(
     org: string,
     fileName: string,
     filePath: string,
     originalName?: string
   ) {
-    return this._mediaRepository.saveFile(
+    const media = await this._mediaRepository.saveFile(
       org,
       fileName,
       filePath,
       originalName
     );
+    void this._thumbnails.queue(media);
+    return media;
   }
 
   // Saves an upload and, when a normalizer is configured, hands it to the
@@ -185,13 +189,20 @@ export class MediaService {
     filePath: string,
     originalName?: string
   ) {
-    const media = await this.saveFile(org, fileName, filePath, originalName);
+    // A configured normalizer first decides which source becomes ready.
+    const media = await this._mediaRepository.saveFile(
+      org,
+      fileName,
+      filePath,
+      originalName
+    );
     const client = this._temporalService.client.getRawClient();
     if (
       !this.processor ||
       !PROCESSABLE[extname(fileName).toLowerCase()] ||
       !client
     ) {
+      void this._thumbnails.queue(media);
       return media;
     }
 
@@ -307,6 +318,7 @@ export class MediaService {
       throw new HttpException('Media not found', 404);
     }
 
+    if (media.status === 'ready') void this._thumbnails.queue(media);
     return media;
   }
 
@@ -458,8 +470,11 @@ export class MediaService {
     );
   }
 
-  getMedia(org: string, page: number, search?: string) {
-    return this._mediaRepository.getMedia(org, page, search);
+  async getMedia(org: string, page: number, search?: string) {
+    const media = await this._mediaRepository.getMedia(org, page, search);
+    // Backfill videos already in the library, one visible page at a time.
+    for (const item of media.results) void this._thumbnails.queue(item);
+    return media;
   }
 
   saveMediaInformation(org: string, data: SaveMediaInformationDto) {

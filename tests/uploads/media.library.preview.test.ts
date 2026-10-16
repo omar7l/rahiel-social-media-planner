@@ -1,11 +1,15 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MediaBox } from '../../apps/frontend/src/components/media/media.component';
 
 const fixture = vi.hoisted(() => ({
   results: [
-    { id: 'iphone', path: 'https://media.example.test/IMG_1234.MOV' },
+    {
+      id: 'iphone',
+      path: 'https://media.example.test/IMG_1234.MOV',
+      thumbnail: null as string | null,
+    },
     { id: 'mp4', path: 'https://media.example.test/video.mp4' },
     { id: 'photo', path: 'https://media.example.test/photo.jpg' },
   ],
@@ -78,6 +82,15 @@ function render(type?: 'image' | 'video') {
 }
 
 describe('media-library video previews', () => {
+  afterEach(() => {
+    fixture.results[0].thumbnail = null;
+  });
+  it('shows a generated JPEG without requiring the browser to decode HEVC', () => {
+    fixture.results[0].thumbnail = 'https://media.example.test/iphone-preview.jpg';
+    const html = render('video');
+    expect(html).toMatch(/<img[^>]+iphone-preview\.jpg/);
+    expect(html).not.toMatch(/<video[^>]+IMG_1234\.MOV/);
+  });
   it('renders an iPhone MOV as a video card', () => {
     const html = render();
     expect(html.match(/<(video|img)[^>]+IMG_1234\.MOV/)?.[1]).toBe('video');

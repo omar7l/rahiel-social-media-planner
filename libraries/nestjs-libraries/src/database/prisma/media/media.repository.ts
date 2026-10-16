@@ -84,6 +84,24 @@ export class MediaRepository {
     });
   }
 
+  setGeneratedThumbnail(
+    org: string,
+    id: string,
+    sourcePath: string,
+    thumbnail: string
+  ) {
+    return this._media.model.media.updateMany({
+      where: {
+        id,
+        organizationId: org,
+        path: sourcePath,
+        deletedAt: null,
+        OR: [{ thumbnail: null }, { thumbnail: '' }],
+      },
+      data: { thumbnail },
+    });
+  }
+
   deleteMedia(org: string, id: string) {
     return this._media.model.media.update({
       where: {

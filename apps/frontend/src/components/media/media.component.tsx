@@ -224,9 +224,13 @@ export const MediaBox: FC<{
   const fetch = useFetch();
   const modals = useModals();
   const toaster = useToaster();
+  const thumbnailRefreshUntil = useRef(Date.now() + 120_000);
   useEffect(() => {
     setPage(0);
   }, [debouncedSearch]);
+  useEffect(() => {
+    thumbnailRefreshUntil.current = Date.now() + 120_000;
+  }, [page, debouncedSearch]);
   const loadMedia = useCallback(async () => {
     const params = new URLSearchParams({ page: String(page + 1) });
     if (debouncedSearch.trim()) {
@@ -236,7 +240,16 @@ export const MediaBox: FC<{
   }, [page, debouncedSearch]);
   const { data, mutate, isLoading } = useSWR(
     `get-media-${page}-${debouncedSearch}`,
-    loadMedia
+    loadMedia,
+    {
+      refreshInterval: (data: any) =>
+        Date.now() < thumbnailRefreshUntil.current &&
+        data?.results?.some(
+          (media: any) => isVideoFile(media.path) && !media.thumbnail
+        )
+          ? 3000
+          : 0,
+    }
   );
   const [selected, setSelected] = useState([]);
   const t = useT();
@@ -252,6 +265,7 @@ export const MediaBox: FC<{
         ? 'video/mp4'
         : 'image/*,video/mp4',
     onUploadSuccess: async (arr) => {
+      thumbnailRefreshUntil.current = Date.now() + 120_000;
       await mutate();
       if (standalone) {
         return;
@@ -673,14 +687,18 @@ export const MediaBox: FC<{
                           </svg>
                         </div>
                       </div>
-                      {isVideoFile(media.path) ? (
+                      {isVideoFile(media.path) && !media.thumbnail ? (
                         <VideoFrame url={mediaDirectory.set(media.path)} />
                       ) : (
                         <img
                           width="100%"
                           height="100%"
                           className="w-full h-full object-cover"
-                          src={mediaDirectory.set(media.path)}
+                          src={mediaDirectory.set(
+                            isVideoFile(media.path) && media.thumbnail
+                              ? media.thumbnail
+                              : media.path
+                          )}
                           alt="media"
                         />
                       )}

@@ -50,3 +50,13 @@ resumable-upload MIME types. A validation matrix checks MOV against the existing
 video restrictions, including image-only services. These tests do not publish
 live social posts and do not guarantee every codec/profile is accepted by every
 platform.
+
+## Background thumbnails
+
+The thumbnail tests decode a generated 10-bit HEVC MOV with the installed
+FFmpeg binary and verify JPEG output, original preservation, local path
+containment, temporary cleanup, source limits, and corrupt-input handling.
+Repository and queue tests cover duplicate scheduling, unavailable queues,
+manual-cover races, and writes restricted to the original media owner and URL.
+The media-library render test requires the JPEG card to work without video
+decoding. See `docs/video-thumbnails.md` for operational limits.
