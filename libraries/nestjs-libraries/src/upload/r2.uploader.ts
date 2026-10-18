@@ -18,6 +18,46 @@ import { UploadFactory } from '@gitroom/nestjs-libraries/upload/upload.factory';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { fileTypeFromBuffer } = require('file-type');
 
+// ISO media may put padding before ftyp. The generic detector classifies a
+// leading free/wide box as QuickTime without examining the following brand.
+async function detectUploadedType(
+  prefix: Buffer,
+  readAt: (offset: number) => Promise<Buffer>
+) {
+  let offset = 0;
+  // Bound both work and remote reads, including for deliberately malformed boxes.
+  for (let boxes = 0; boxes < 16; boxes++) {
+    const header =
+      offset + 16 <= prefix.length
+        ? prefix.subarray(offset)
+        : await readAt(offset);
+    if (header.length < 16) break;
+    const type = header.toString('ascii', 4, 8);
+    if (type === 'ftyp') {
+      if (header.readUInt32BE(0) < 16) return undefined;
+      const detected = await fileTypeFromBuffer(header);
+      // M4V is an MP4 video brand; it is not a different container or codec.
+      return detected?.mime === 'video/x-m4v'
+        ? { ext: 'mp4', mime: 'video/mp4' }
+        : detected;
+    }
+    if (!['free', 'wide', 'skip'].includes(type)) break;
+    let size = header.readUInt32BE(0);
+    if (size === 1) {
+      const extendedSize = header.readBigUInt64BE(8);
+      if (
+        extendedSize < 16n ||
+        extendedSize > BigInt(Number.MAX_SAFE_INTEGER - 4101 - offset)
+      )
+        break;
+      size = Number(extendedSize);
+    }
+    if (size < 8 || size > Number.MAX_SAFE_INTEGER - 4101 - offset) break;
+    offset += size;
+  }
+  return fileTypeFromBuffer(prefix);
+}
+
 const ALLOWED_EXT_TO_MIME: Record<string, string> = {
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
@@ -225,7 +265,23 @@ export async function completeMultipartUpload(req: Request, res: Response) {
       chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
     }
     const prefix = Buffer.concat(chunks);
-    const detected = await fileTypeFromBuffer(prefix);
+    const totalBytes = Number(head.ContentRange?.split('/').pop());
+    const detected = await detectUploadedType(prefix, async (offset) => {
+      if (Number.isFinite(totalBytes) && offset + 16 > totalBytes)
+        return Buffer.alloc(0);
+      const next = await R2.send(
+        new GetObjectCommand({
+          Bucket: CLOUDFLARE_BUCKETNAME,
+          Key: key,
+          Range: `bytes=${offset}-${offset + 4100}`,
+        })
+      );
+      const chunks: Buffer[] = [];
+      for await (const chunk of next.Body as AsyncIterable<Buffer>) {
+        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+      }
+      return Buffer.concat(chunks);
+    });
 
     // Native MOV files can use either a QuickTime or ISO MP4 brand.
     // Keep .mp4 strict unless the optional normalizer will convert it.
@@ -235,6 +291,10 @@ export async function completeMultipartUpload(req: Request, res: Response) {
         ? ['video/quicktime', 'video/mp4']
         : [expectedMime];
     if (!detected || !acceptedMimes.includes(detected.mime)) {
+      console.warn('Upload type validation rejected', {
+        extension: safeExt,
+        detectedMime: detected?.mime || 'unknown',
+      });
       await R2.send(
         new DeleteObjectCommand({ Bucket: CLOUDFLARE_BUCKETNAME, Key: key })
       );
