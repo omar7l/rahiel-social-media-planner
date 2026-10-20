@@ -10,6 +10,7 @@ import {
   CompleteMultipartUploadCommand,
   DeleteObjectCommand,
   PutObjectCommand,
+  CopyObjectCommand,
 } from '@aws-sdk/client-s3';
 import {
   createMultipartUpload,
@@ -48,7 +49,12 @@ function storage(bytes = movie) {
           Location: 'https://storage.example.test/' + command.input.Key,
         };
       if (command instanceof GetObjectCommand)
-        return { Body: Readable.from([bytes]) };
+        return {
+          Body: Readable.from([bytes]),
+          Metadata: { 'x-amz-meta-file-hash': 'fixture-hash' },
+        };
+      if (command instanceof CopyObjectCommand)
+        return { CopyObjectResult: { ETag: 'copied' } };
       if (command instanceof DeleteObjectCommand) return {};
       throw new Error('Unexpected storage operation');
     });
@@ -156,7 +162,7 @@ describe('native QuickTime uploads', () => {
   });
   it.each([
     ['disguised.mov', Buffer.from('<html>This is not a movie</html>')],
-    ['mislabelled.mp4', movie],
+    ['disguised.mp4', Buffer.from('<html>This is not a movie</html>')],
   ])(
     'rejects and removes content that does not match %s',
     async (key, bytes) => {
@@ -178,6 +184,57 @@ describe('native QuickTime uploads', () => {
       expect(deleted.input.Key).toBe(key);
     }
   );
+  it('keeps a QuickTime original named MP4 and stores its real MOV type', async () => {
+    vi.stubEnv('RUNPOD_API_KEY', '');
+    vi.stubEnv('RUNPOD_ENDPOINT_ID', '');
+    const send = storage(movie),
+      completed = capture();
+    const result = await completeMultipartUpload(
+      {
+        body: { key: 'mac-export.mp4', uploadId: 'fixture', parts: [] },
+      } as any,
+      completed.response
+    );
+    expect(completed.code()).toBe(200);
+    expect(result.Location).toMatch(/\/mac-export\.mov$/);
+    expect(result.Key).toBe('mac-export.mov');
+    const copied = send.mock.calls.find(
+      ([command]) => command instanceof CopyObjectCommand
+    )![0] as CopyObjectCommand;
+    expect(copied.input).toMatchObject({
+      Key: 'mac-export.mov',
+      CopySource: 'local-test-bucket/mac-export.mp4',
+      ContentType: 'video/quicktime',
+      MetadataDirective: 'REPLACE',
+      Metadata: { 'x-amz-meta-file-hash': 'fixture-hash' },
+    });
+    const deleted = send.mock.calls.find(
+      ([command]) => command instanceof DeleteObjectCommand
+    )![0] as DeleteObjectCommand;
+    expect(deleted.input.Key).toBe('mac-export.mp4');
+  });
+  it('fails completion and removes temporary objects if correcting the container fails', async () => {
+    const send = storage(movie),
+      completed = capture();
+    const originalSend = send.getMockImplementation()!;
+    send.mockImplementation(async (command: any) => {
+      if (command instanceof CopyObjectCommand) throw new Error('copy failed');
+      return originalSend(command);
+    });
+    await completeMultipartUpload(
+      {
+        body: { key: 'failed-export.mp4', uploadId: 'fixture', parts: [] },
+      } as any,
+      completed.response
+    );
+    expect(completed.code()).toBe(500);
+    expect(
+      send.mock.calls
+        .map(([command]) => command)
+        .filter((command) => command instanceof DeleteObjectCommand)
+        .map((command) => command.input.Key)
+    ).toEqual(['failed-export.mp4', 'failed-export.mov']);
+  });
   it('rejects arbitrary stream contents before writing to storage', async () => {
     const cloud = new CloudflareStorage(
       'fixture',

@@ -8,13 +8,13 @@ import {
   PutObjectCommand,
   GetObjectCommand,
   DeleteObjectCommand,
+  CopyObjectCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Request, Response } from 'express';
 import crypto from 'crypto';
 import path from 'path';
 import { makeId } from '@gitroom/nestjs-libraries/services/make.is';
-import { UploadFactory } from '@gitroom/nestjs-libraries/upload/upload.factory';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { fileTypeFromBuffer } = require('file-type');
 
@@ -31,7 +31,8 @@ async function detectUploadedType(
       offset + 16 <= prefix.length
         ? prefix.subarray(offset)
         : await readAt(offset);
-    if (header.length < 16) break;
+    if (header.length < 16)
+      return offset === 0 ? fileTypeFromBuffer(prefix) : undefined;
     const type = header.toString('ascii', 4, 8);
     if (type === 'ftyp') {
       if (header.readUInt32BE(0) < 16) return undefined;
@@ -41,7 +42,8 @@ async function detectUploadedType(
         ? { ext: 'mp4', mime: 'video/mp4' }
         : detected;
     }
-    if (!['free', 'wide', 'skip'].includes(type)) break;
+    if (!['free', 'wide', 'skip'].includes(type))
+      return fileTypeFromBuffer(prefix);
     let size = header.readUInt32BE(0);
     if (size === 1) {
       const extendedSize = header.readBigUInt64BE(8);
@@ -49,13 +51,14 @@ async function detectUploadedType(
         extendedSize < 16n ||
         extendedSize > BigInt(Number.MAX_SAFE_INTEGER - 4101 - offset)
       )
-        break;
+        return undefined;
       size = Number(extendedSize);
     }
-    if (size < 8 || size > Number.MAX_SAFE_INTEGER - 4101 - offset) break;
+    if (size < 8 || size > Number.MAX_SAFE_INTEGER - 4101 - offset)
+      return undefined;
     offset += size;
   }
-  return fileTypeFromBuffer(prefix);
+  return undefined;
 }
 
 const ALLOWED_EXT_TO_MIME: Record<string, string> = {
@@ -283,11 +286,10 @@ export async function completeMultipartUpload(req: Request, res: Response) {
       return Buffer.concat(chunks);
     });
 
-    // Native MOV files can use either a QuickTime or ISO MP4 brand.
-    // Keep .mp4 strict unless the optional normalizer will convert it.
+    // Mac exports can contain genuine QuickTime bytes under an MP4 filename.
+    // Validate the video container, then store its actual type below.
     const acceptedMimes =
-      safeExt === '.mov' ||
-      (safeExt === '.mp4' && UploadFactory.processorEnabled())
+      safeExt === '.mov' || safeExt === '.mp4'
         ? ['video/quicktime', 'video/mp4']
         : [expectedMime];
     if (!detected || !acceptedMimes.includes(detected.mime)) {
@@ -301,6 +303,43 @@ export async function completeMultipartUpload(req: Request, res: Response) {
       return res
         .status(400)
         .json({ message: 'File contents do not match declared type.' });
+    }
+
+    if (safeExt === '.mp4' && detected.mime === 'video/quicktime') {
+      const movKey = key.slice(0, -4) + '.mov';
+      try {
+        // Server-side copy preserves the original bytes; no transcoding or
+        // download of the whole video is needed to correct its name and MIME.
+        const copied = await R2.send(
+          new CopyObjectCommand({
+            Bucket: CLOUDFLARE_BUCKETNAME,
+            Key: movKey,
+            CopySource: `${CLOUDFLARE_BUCKETNAME}/${encodeURIComponent(key)}`,
+            ContentType: 'video/quicktime',
+            MetadataDirective: 'REPLACE',
+            Metadata: head.Metadata,
+          })
+        );
+        await R2.send(
+          new DeleteObjectCommand({ Bucket: CLOUDFLARE_BUCKETNAME, Key: key })
+        );
+        response.Key = movKey;
+        response.Location = movKey;
+        response.ETag = copied.CopyObjectResult?.ETag;
+      } catch (error) {
+        // Clean up both temporary copies when completion fails.
+        for (const failedKey of [key, movKey]) {
+          await R2.send(
+            new DeleteObjectCommand({
+              Bucket: CLOUDFLARE_BUCKETNAME,
+              Key: failedKey,
+            })
+          ).catch(() =>
+            console.warn('Failed to clean up an incomplete video upload')
+          );
+        }
+        throw error;
+      }
     }
 
     response.Location =
