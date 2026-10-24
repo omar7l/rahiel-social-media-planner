@@ -23,7 +23,7 @@ export default defineConfig({
     },
   },
   test: {
-    include: ['tests/uploads/**/*.test.ts'],
+    include: ['tests/uploads/**/*.test.ts', 'tests/auth/**/*.test.ts'],
     environment: 'node',
     env: {
       CLOUDFLARE_ACCOUNT_ID: 'local-upload-test',

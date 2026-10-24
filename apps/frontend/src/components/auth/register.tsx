@@ -5,7 +5,7 @@ import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 import Link from 'next/link';
 import { Button } from '@gitroom/react/form/button';
 import { Input } from '@gitroom/react/form/input';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { classValidatorResolver } from '@hookform/resolvers/class-validator';
 import { CreateOrgUserDto } from '@gitroom/nestjs-libraries/dtos/auth/create.org.user.dto';
 import { GithubProvider } from '@gitroom/frontend/components/auth/providers/github.provider';
@@ -38,30 +38,60 @@ type Inputs = {
   provider: string;
 };
 export function Register() {
+  const t = useT();
   const getQuery = useSearchParams();
   const fetch = useFetch();
   const [provider] = useState(getQuery?.get('provider')?.toUpperCase());
   const [code, setCode] = useState(getQuery?.get('code') || '');
+  const state = getQuery?.get('state') || '';
   const [show, setShow] = useState(false);
+  const [callbackError, setCallbackError] = useState(false);
+  const callbackStarted = useRef(false);
+  const load = useCallback(async () => {
+    try {
+      const response = await fetch(
+        `/auth/oauth/${provider?.toUpperCase() || 'LOCAL'}/exists`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ code, state }),
+        }
+      );
+      if (!response.ok) {
+        setCallbackError(true);
+        return;
+      }
+      const { token, login } = await response.json();
+      if (token) {
+        setCode(token);
+        setShow(true);
+      } else if (!login) {
+        setCallbackError(true);
+      }
+    } catch {
+      setCallbackError(true);
+    }
+  }, [fetch, provider, code, state]);
   useEffect(() => {
-    if (provider && code) {
+    if (provider && code && !callbackStarted.current) {
+      callbackStarted.current = true;
       load();
     }
-  }, []);
-  const load = useCallback(async () => {
-    const { token } = await (
-      await fetch(`/auth/oauth/${provider?.toUpperCase() || 'LOCAL'}/exists`, {
-        method: 'POST',
-        body: JSON.stringify({
-          code,
-        }),
-      })
-    ).json();
-    if (token) {
-      setCode(token);
-      setShow(true);
-    }
-  }, [provider, code]);
+  }, [load, provider, code]);
+  if (callbackError) {
+    return (
+      <div className="text-center">
+        <p role="alert">
+          {t(
+            'sign_in_failed_try_again',
+            'Sign-in could not be completed. Please try again.'
+          )}
+        </p>
+        <Link className="underline" href="/auth/login">
+          {t('back_to_sign_in', 'Back to sign in')}
+        </Link>
+      </div>
+    );
+  }
   if (!code && !provider) {
     return <RegisterAfter token="" provider="LOCAL" />;
   }
