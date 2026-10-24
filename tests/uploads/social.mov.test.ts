@@ -10,7 +10,17 @@ import { TiktokBusinessProvider } from '../../libraries/nestjs-libraries/src/int
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
 });
+
+// Providers only open local media inside UPLOAD_DIRECTORY.
+const uploadFixture = (name: string) => {
+  vi.stubEnv(
+    'UPLOAD_DIRECTORY',
+    fileURLToPath(new URL('./fixtures', import.meta.url))
+  );
+  return fileURLToPath(new URL(`./fixtures/${name}`, import.meta.url));
+};
 
 describe('native MOV publishing requests', () => {
   it('routes a MOV to the TikTok Business video publishing endpoint', async () => {
@@ -47,9 +57,7 @@ describe('native MOV publishing requests', () => {
   });
   it('uploads QuickTime to TikTok through the video endpoint with its actual MIME type', async () => {
     const provider = new TiktokProvider();
-    const path = fileURLToPath(
-      new URL('./fixtures/iphone.mov', import.meta.url)
-    );
+    const path = uploadFixture('iphone.mov');
     const bytes = readFileSync(path);
     const init = vi.spyOn(provider as any, 'fetch').mockResolvedValue(
       new Response(
@@ -144,9 +152,7 @@ describe('native MOV publishing requests', () => {
   });
   it('declares QuickTime for a YouTube resumable upload session', async () => {
     const provider = new YoutubeProvider();
-    const path = fileURLToPath(
-      new URL('./fixtures/iphone.mov', import.meta.url)
-    );
+    const path = uploadFixture('iphone.mov');
     const request = vi.spyOn(provider as any, 'fetch').mockResolvedValue(
       new Response(null, {
         headers: { location: 'https://upload.example.test/youtube' },
