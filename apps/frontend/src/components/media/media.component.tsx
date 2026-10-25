@@ -15,6 +15,7 @@ import { Button } from '@gitroom/react/form/button';
 import useSWR from 'swr';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 import { isVideoFile } from '@gitroom/helpers/utils/is.video.file';
+import { hasExtension } from '@gitroom/helpers/utils/has.extension';
 import { Media } from '@prisma/client';
 import { useMediaDirectory } from '@gitroom/react/helpers/use.media.directory';
 import { useSettings } from '@gitroom/frontend/components/launches/helpers/use.values';
@@ -215,7 +216,7 @@ const MAX_UPLOAD_SIZE = 1024 * 1024 * 1024; // 1 GB
 export const MediaBox: FC<{
   setMedia: (params: { id: string; path: string }[]) => void;
   standalone?: boolean;
-  type?: 'image' | 'video';
+  type?: 'image' | 'image-static' | 'video';
   closeModal: () => void;
 }> = ({ type, standalone, setMedia }) => {
   const [page, setPage] = useState(0);
@@ -261,6 +262,8 @@ export const MediaBox: FC<{
     allowedFileTypes:
       type == 'image'
         ? 'image/*'
+        : type == 'image-static'
+        ? 'image/jpeg,image/png'
         : type == 'video'
         ? 'video/mp4'
         : 'image/*,video/mp4',
@@ -622,6 +625,10 @@ export const MediaBox: FC<{
                   return isVideoFile(f.path);
                 } else if (type === 'image') {
                   return !isVideoFile(f.path);
+                } else if (type === 'image-static') {
+                  return ['jpg', 'jpeg', 'png'].some((ext) =>
+                    hasExtension(f.path, ext)
+                  );
                 }
                 return true;
               })
@@ -658,7 +665,7 @@ export const MediaBox: FC<{
                     )}
                     <div
                       className={clsx(
-                        'absolute bottom-[10px] start-[10px] end-[10px] z-[100] truncate text-end mobile:text-[12px]',
+                        'absolute bottom-[10px] start-[10px] end-[10px] z-[100] truncate text-end mobile:text-[12px] rounded-[4px] px-[6px] bg-black/60 text-white',
                         !standalone && 'mobile:hidden'
                       )}
                     >
@@ -911,6 +918,7 @@ export const MultiMediaComponent: FC<{
                         onClick={async () => {
                           modals.openModal({
                             title: t('media_settings', 'Media Settings'),
+                            size: '720px',
                             children: (close) => (
                               <MediaComponentInner
                                 media={media as any}
