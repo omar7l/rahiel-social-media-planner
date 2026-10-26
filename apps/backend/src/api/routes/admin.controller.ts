@@ -107,6 +107,16 @@ export class AdminController {
     return this._adminTeamsService.invite(user, orgId, body);
   }
 
+  @Post('/teams/:orgId/members')
+  async addExisting(
+    @GetUserFromRequest() user: User,
+    @Param('orgId') orgId: string,
+    @Body() body: AdminInviteDto
+  ) {
+    this.assertSuperAdmin(user);
+    return this._adminTeamsService.addExisting(user, orgId, body);
+  }
+
   @Put('/teams/:orgId/members/:userId')
   async setRole(
     @GetUserFromRequest() user: User,

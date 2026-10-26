@@ -625,6 +625,7 @@ export class OrganizationRepository {
           where: { user: { deletedAt: null } },
           orderBy: { createdAt: 'asc' },
           select: {
+            id: true,
             role: true,
             disabled: true,
             createdAt: true,

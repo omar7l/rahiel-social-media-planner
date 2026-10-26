@@ -35,6 +35,7 @@ export class AdminTeamsService {
       channels: team._count.Integration,
       members: team.users.map((m) => ({
         id: m.user.id,
+        membershipId: m.id,
         email: m.user.email,
         name: m.user.name,
         role: m.role,
@@ -73,6 +74,17 @@ export class AdminTeamsService {
       sendEmail: !!body.sendEmail,
     };
     return this._organizationService.inviteTeamMember(org, admin, invite);
+  }
+
+  /** Adds an existing account to another team, e.g. to move or share someone. */
+  async addExisting(admin: User, orgId: string, body: AdminInviteDto) {
+    const org = await this.team(orgId);
+    await this._organizationService.addTeamMemberByEmail(org, {
+      email: body.email,
+      role: body.role,
+    });
+    this._logger.log(`Super admin ${admin.id} added ${body.email} to ${orgId}`);
+    return { ok: true };
   }
 
   async setRole(admin: User, orgId: string, userId: string, body: AdminMemberRoleDto) {
