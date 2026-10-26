@@ -611,6 +611,75 @@ export class OrganizationRepository {
     });
   }
 
+  /** Super admin: every live team with its members and connected channel count. */
+  listAllTeams() {
+    return this._organization.model.organization.findMany({
+      where: { deletedAt: null },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        id: true,
+        name: true,
+        createdAt: true,
+        _count: { select: { Integration: { where: { deletedAt: null } } } },
+        users: {
+          where: { user: { deletedAt: null } },
+          orderBy: { createdAt: 'asc' },
+          select: {
+            role: true,
+            disabled: true,
+            createdAt: true,
+            user: {
+              select: {
+                id: true,
+                email: true,
+                name: true,
+                isSuperAdmin: true,
+                lastOnline: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  /** Super admin: a new team owned by an existing user, without a new account. */
+  createTeamForUser(name: string, userId: string) {
+    return this._organization.model.organization.create({
+      data: {
+        name,
+        apiKey: AuthService.fixedEncryption(makeSecureId(20)),
+        allowTrial: false,
+        isTrailing: false,
+        users: { create: { role: Role.SUPERADMIN, userId } },
+      },
+      select: { id: true, name: true },
+    });
+  }
+
+  getMembership(orgId: string, userId: string) {
+    return this._userOrg.model.userOrganization.findUnique({
+      where: { userId_organizationId: { userId, organizationId: orgId } },
+    });
+  }
+
+  countOwners(orgId: string) {
+    return this._userOrg.model.userOrganization.count({
+      where: {
+        organizationId: orgId,
+        role: Role.SUPERADMIN,
+        user: { deletedAt: null },
+      },
+    });
+  }
+
+  setMemberRole(orgId: string, userId: string, role: Role) {
+    return this._userOrg.model.userOrganization.update({
+      where: { userId_organizationId: { userId, organizationId: orgId } },
+      data: { role },
+    });
+  }
+
   async deleteTeamMember(orgId: string, userId: string) {
     return this._userOrg.model.userOrganization.delete({
       where: {
