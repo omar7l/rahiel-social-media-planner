@@ -18,6 +18,7 @@ import { useToaster } from '@gitroom/react/toaster/toaster';
 import { useSWRConfig } from 'swr';
 import clsx from 'clsx';
 import { TeamsComponent } from '@gitroom/frontend/components/settings/teams.component';
+import { AllTeamsComponent } from '@gitroom/frontend/components/settings/all-teams.component';
 import { useUser } from '@gitroom/frontend/components/layout/user.context';
 import { LogoutComponent } from '@gitroom/frontend/components/layout/logout.component';
 import { useSearchParams } from 'next/navigation';
@@ -91,7 +92,10 @@ export const SettingsPopup: FC<{
     if (user?.tier?.public_api && isGeneral && showLogout) {
       arr.push({ tab: 'agents', label: t('agents_dev', 'Agents / Dev') });
     }
-    if (user?.tier?.team_members && isGeneral && user?.role !== 'USER') {
+    if (
+      user?.isSuperAdmin ||
+      (user?.tier?.team_members && isGeneral && user?.role !== 'USER')
+    ) {
       arr.push({ tab: 'teams', label: t('teams', 'Teams') });
     }
     if (user?.tier?.webhooks) {
@@ -174,7 +178,13 @@ export const SettingsPopup: FC<{
                   <GlobalSettings />
                 </div>
               )}
+              {tab === 'teams' && !!user?.isSuperAdmin && (
+                <div>
+                  <AllTeamsComponent />
+                </div>
+              )}
               {tab === 'teams' &&
+                !user?.isSuperAdmin &&
                 !!user?.tier?.team_members &&
                 isGeneral &&
                 user?.role !== 'USER' && (
