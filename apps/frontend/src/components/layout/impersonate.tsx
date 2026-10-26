@@ -1145,3 +1145,78 @@ export const Impersonate = () => {
     </div>
   );
 };
+
+/** Quiet super-admin tools shown in Settings → Teams instead of the old top bar. */
+export const AdminTools = () => {
+  const { openModal } = useModals();
+  const t = useT();
+  const link =
+    'text-[13px] text-textItemBlur hover:text-newTextColor underline-offset-4 hover:underline cursor-pointer';
+  return (
+    <div className="flex flex-wrap items-center gap-x-[16px] gap-y-[4px]">
+      <a className={link} href="/admin/errors">
+        {t('view_errors', 'Errors')}
+      </a>
+      <a className={link} href="/admin/stats">
+        {t('view_stats', 'Stats')}
+      </a>
+      <span
+        className={link}
+        onClick={() =>
+          openModal({
+            title: t('add_announcement', 'Add Announcement'),
+            children: (close) => <AddAnnouncementModal close={close} />,
+          })
+        }
+      >
+        {t('add_announcement', 'Announcement')}
+      </span>
+      <span
+        className={link}
+        onClick={() =>
+          openModal({
+            title: t('import_debug_post', 'Import Debug Post'),
+            children: (close) => <ImportDebugPostModal close={close} />,
+          })
+        }
+      >
+        {t('import_debug_post', 'Debug post')}
+      </span>
+    </div>
+  );
+};
+
+/** Slim notice while a super admin views Planner as someone else. */
+export const ImpersonationNotice = () => {
+  const fetch = useFetch();
+  const user = useUser();
+  const { isSecured } = useVariables();
+  const back = useCallback(async () => {
+    if (!isSecured) {
+      setCookie('impersonate', '', -10);
+    } else {
+      await fetch(`/user/impersonate`, {
+        method: 'POST',
+        body: JSON.stringify({ id: '' }),
+      });
+    }
+    window.location.href = '/settings?tab=teams';
+  }, [isSecured]);
+  if (!user?.impersonate) {
+    return null;
+  }
+  return (
+    <div className="mb-[8px] flex items-center justify-center gap-[12px] rounded-[8px] border border-newTableBorder bg-newBgColorInner px-[12px] py-[6px] text-[13px]">
+      <span className="text-textItemBlur">
+        Viewing as <strong className="text-newTextColor">{user?.email}</strong>
+      </span>
+      <button
+        type="button"
+        className="rounded-[6px] bg-btnPrimary px-[10px] py-[2px] text-white"
+        onClick={back}
+      >
+        Back to my account
+      </button>
+    </div>
+  );
+};

@@ -10,10 +10,12 @@ import { useToaster } from '@gitroom/react/toaster/toaster';
 import { deleteDialog } from '@gitroom/react/helpers/delete.dialog';
 import { useUser } from '@gitroom/frontend/components/layout/user.context';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
+import { AdminTools } from '@gitroom/frontend/components/layout/impersonate';
 
 type Role = 'SUPERADMIN' | 'ADMIN' | 'USER';
 type Member = {
   id: string;
+  membershipId: string;
   email: string;
   name: string | null;
   role: Role;
@@ -280,6 +282,29 @@ export const AllTeamsComponent = () => {
     await call(`/admin/users/${member.id}`, { method: 'DELETE' }, 'Account deleted');
   };
 
+  const viewAs = (member: Member) => async () => {
+    const response = await fetch('/user/impersonate', {
+      method: 'POST',
+      body: JSON.stringify({ id: member.membershipId }),
+    });
+    if (!response.ok) {
+      toast.show(await message(response, 'Could not switch view'), 'warning');
+      return;
+    }
+    window.location.href = '/';
+  };
+
+  const addToTeam = (member: Member) => async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const target = (data || []).find((team) => team.id === e.target.value);
+    e.target.value = '';
+    if (!target) return;
+    await call(
+      `/admin/teams/${target.id}/members`,
+      { method: 'POST', body: JSON.stringify({ email: member.email, role: 'USER' }) },
+      `Added to ${target.name} as User`
+    );
+  };
+
   const deleteTeam = (team: Team) => async () => {
     if (
       !(await deleteDialog(
@@ -312,6 +337,9 @@ export const AllTeamsComponent = () => {
                   people === 1 ? 'person' : 'people'
                 }. Sign-up is closed; people join by invitation.`
               : 'Loading…'}
+          </div>
+          <div className="mt-[8px]">
+            <AdminTools />
           </div>
         </div>
         <div className="flex gap-[8px] items-center">
@@ -396,19 +424,52 @@ export const AllTeamsComponent = () => {
                   >
                     Remove
                   </button>
-                  <button
-                    type="button"
-                    disabled={isMe || member.superAdmin}
-                    title={
-                      isMe || member.superAdmin
-                        ? 'Super admin accounts cannot be deleted here'
-                        : 'Delete this account everywhere'
-                    }
-                    className="text-[13px] text-textItemBlur hover:text-red-400 px-[6px] disabled:opacity-30 disabled:hover:text-textItemBlur"
-                    onClick={deleteUser(member, data || [])}
-                  >
-                    Delete account
-                  </button>
+                  <details className="relative">
+                    <summary className="list-none cursor-pointer select-none text-[13px] text-textItemBlur hover:text-newTextColor px-[6px]">
+                      More
+                    </summary>
+                    <div className="absolute end-0 top-[calc(100%+4px)] z-[20] flex w-[220px] flex-col gap-[2px] rounded-[8px] border border-newTableBorder bg-newBgColorInner p-[6px] shadow-lg text-[13px]">
+                      {!isMe && (
+                        <button
+                          type="button"
+                          className="rounded-[6px] px-[8px] py-[6px] text-start hover:bg-boxHover"
+                          onClick={viewAs(member)}
+                        >
+                          View Planner as this person
+                        </button>
+                      )}
+                      {(data || []).filter((other) => !other.members.some((m) => m.id === member.id)).length > 0 && (
+                        <select
+                          aria-label={`Add ${member.email} to another team`}
+                          className="h-[32px] rounded-[6px] border border-newTableBorder bg-newBgColorInner px-[6px]"
+                          defaultValue=""
+                          onChange={addToTeam(member)}
+                        >
+                          <option value="" disabled>
+                            Add to another team…
+                          </option>
+                          {(data || []).filter((other) => !other.members.some((m) => m.id === member.id)).map((other) => (
+                            <option key={other.id} value={other.id}>
+                              {other.name}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                      <button
+                        type="button"
+                        disabled={isMe || member.superAdmin}
+                        title={
+                          isMe || member.superAdmin
+                            ? 'Super admin accounts cannot be deleted here'
+                            : 'Delete this account everywhere'
+                        }
+                        className="rounded-[6px] px-[8px] py-[6px] text-start text-red-400 hover:bg-boxHover disabled:opacity-30 disabled:hover:bg-transparent"
+                        onClick={deleteUser(member, data || [])}
+                      >
+                        Delete account
+                      </button>
+                    </div>
+                  </details>
                 </li>
               );
             })}
