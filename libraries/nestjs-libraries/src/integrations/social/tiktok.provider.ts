@@ -43,7 +43,6 @@ export class TiktokProvider extends SocialAbstract implements SocialProvider {
     'user.info.basic',
     'video.publish',
     'video.upload',
-    'user.info.profile',
     'user.info.stats',
   ];
   override maxConcurrentJob = 10000;
