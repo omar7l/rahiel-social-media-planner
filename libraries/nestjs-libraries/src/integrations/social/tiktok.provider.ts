@@ -23,6 +23,7 @@ import { createReadStream } from 'fs';
 import { getSsrfSafeDispatcher } from '@gitroom/nestjs-libraries/dtos/webhooks/ssrf.safe.dispatcher';
 import { Integration } from '@prisma/client';
 import { Rules } from '@gitroom/nestjs-libraries/chat/rules.description.decorator';
+import { DashboardFunction } from '@gitroom/nestjs-libraries/integrations/dashboard.function.decorator';
 
 @Rules(
   [
@@ -439,6 +440,39 @@ export class TiktokProvider extends SocialAbstract implements SocialProvider {
     };
   }
 
+  // Only what the publishing screen needs. The privacy choices, the interaction
+  // limits and the length limit all come from TikTok, so the screen never offers
+  // an option TikTok would reject. No token or account id leaves this method.
+  @DashboardFunction()
+  async creatorInfo(accessToken: string) {
+    const { data, error } = await (
+      await fetch(
+        'https://open.tiktokapis.com/v2/post/publish/creator_info/query/',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json; charset=UTF-8',
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      )
+    ).json();
+
+    if (error?.code && error.code !== 'ok') {
+      throw new Error(`TikTok could not load this account (${error.code})`);
+    }
+
+    return {
+      nickname: data.creator_nickname,
+      username: data.creator_username,
+      privacyLevelOptions: data.privacy_level_options ?? [],
+      commentDisabled: !!data.comment_disabled,
+      duetDisabled: !!data.duet_disabled,
+      stitchDisabled: !!data.stitch_disabled,
+      maxVideoDurationSeconds: data.max_video_post_duration_sec,
+    };
+  }
+
   // Single status check for a publish_id, no loops and no timers: `post` returns
   // a `pending` PostResponse right after the upload, and the post workflow polls
   // this method with durable timers, so a stuck/retried check can never re-run
@@ -574,8 +608,7 @@ export class TiktokProvider extends SocialAbstract implements SocialProvider {
             ? { title: firstPost.message }
             : {}),
           ...(isPhoto ? { description: firstPost.message } : {}),
-          privacy_level:
-            firstPost.settings.privacy_level || 'PUBLIC_TO_EVERYONE',
+          privacy_level: firstPost.settings.privacy_level,
           ...(isPhoto
             ? {}
             : { disable_duet: !this.assetBoolean(firstPost.settings.duet) }),

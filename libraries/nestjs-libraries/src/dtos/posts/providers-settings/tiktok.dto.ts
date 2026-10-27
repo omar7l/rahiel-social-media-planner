@@ -1,5 +1,6 @@
 import {
-  IsBoolean, ValidateIf, IsIn, IsString, MaxLength, IsOptional, IsDefined, IsNumber, Min, Max, ValidateNested
+  IsBoolean, ValidateIf, IsIn, IsString, MaxLength, IsOptional, IsDefined, IsNumber, Min, Max, ValidateNested,
+  ValidateBy, ValidationArguments
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { JSONSchema } from 'class-validator-jsonschema';
@@ -58,6 +59,32 @@ export class TikTokLocation {
   address?: string;
 }
 
+// Branded content is never allowed to be private (TikTok's Branded Content rules).
+const brandedContentIsNotPrivate = () =>
+  ValidateBy({
+    name: 'brandedContentIsNotPrivate',
+    validator: {
+      validate: (value: unknown, args: ValidationArguments) =>
+        !(args.object as TikTokDto).brand_content_toggle || value !== 'SELF_ONLY',
+      defaultMessage: () =>
+        "Branded content can't be private. Choose Public or Friends, or turn off Branded content.",
+    },
+  });
+
+// Turning on commercial content disclosure requires saying who the content promotes.
+const discloseNeedsBrandOption = () =>
+  ValidateBy({
+    name: 'discloseNeedsBrandOption',
+    validator: {
+      validate: (value: unknown, args: ValidationArguments) =>
+        value !== true ||
+        !!(args.object as TikTokDto).brand_organic_toggle ||
+        !!(args.object as TikTokDto).brand_content_toggle,
+      defaultMessage: () =>
+        'You need to indicate if your content promotes yourself, a third party, or both.',
+    },
+  });
+
 // TikTok only honors most of these settings on a DIRECT_POST. With
 // content_posting_method=UPLOAD the media lands in the user's TikTok inbox as a
 // draft, and TikTok's inbox/upload endpoints accept nothing but the title /
@@ -77,13 +104,13 @@ export class TikTokDto {
   })
   title: string;
 
-  @IsIn([
-    'PUBLIC_TO_EVERYONE',
-    'MUTUAL_FOLLOW_FRIENDS',
-    'FOLLOWER_OF_CREATOR',
-    'SELF_ONLY',
-  ])
+  @ValidateIf((p) => p.content_posting_method !== 'UPLOAD')
+  @IsIn(
+    ['PUBLIC_TO_EVERYONE', 'MUTUAL_FOLLOW_FRIENDS', 'FOLLOWER_OF_CREATOR', 'SELF_ONLY'],
+    { message: 'Choose who can see this post' }
+  )
   @IsString()
+  @brandedContentIsNotPrivate()
   @JSONSchema({
     description:
       'Applied only when content_posting_method=DIRECT_POST. Ignored by TikTok on UPLOAD.',
@@ -145,6 +172,16 @@ export class TikTokDto {
       'Applied only when content_posting_method=DIRECT_POST. Ignored by TikTok on UPLOAD.',
   })
   brand_organic_toggle: boolean;
+
+  @ValidateIf((p) => p.content_posting_method !== 'UPLOAD')
+  @IsOptional()
+  @IsBoolean()
+  @discloseNeedsBrandOption()
+  @JSONSchema({
+    description:
+      'Commercial content disclosure. When true, brand_organic_toggle or brand_content_toggle must be true. Applied only when content_posting_method=DIRECT_POST.',
+  })
+  disclose?: boolean;
 
   @Type(() => TikTokMusic)
   @ValidateNested()
