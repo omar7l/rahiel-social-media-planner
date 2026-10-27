@@ -81,6 +81,14 @@ describe('TikTok direct post settings', () => {
   });
 });
 
+describe('TikTok sign-in scopes', () => {
+  it('requests only the scopes the planner reads or writes', () => {
+    expect([...new TiktokProvider().scopes].sort()).toEqual(
+      ['user.info.basic', 'user.info.stats', 'video.list', 'video.publish', 'video.upload']
+    );
+  });
+});
+
 describe('TikTok creator info', () => {
   it('returns only what the publishing screen needs', async () => {
     vi.stubGlobal(

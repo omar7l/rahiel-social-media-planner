@@ -3,24 +3,19 @@
 ## Product/scope explanation — max 1000 chars
 
 ```text
-Rahiel Studios Social Media Planner is a web app for preparing, scheduling, uploading, and publishing approved social media content. Login Kit lets an authorized user connect their TikTok account and confirm the correct profile inside the planner.
+Rahiel Studios Social Media Planner schedules and publishes social media content for client businesses. Each business uses its own workspace and TikTok account. Login Kit lets the authorized user connect the account and confirm the correct profile.
 
-Content Posting API is used only after the user selects a TikTok account, adds media/caption details, reviews the post, and starts upload or publishing.
+Content Posting API is used only after the user selects the account, adds media and caption, chooses who can see the post and confirms. "Upload" sends a draft to the creator's TikTok inbox. "Direct post" publishes the reviewed post.
 
 Scopes:
-user.info.basic/profile: show connected account identity/profile so users confirm the correct TikTok account.
-user.info.stats: show basic account context/analytics.
-video.list: reference existing/published TikTok videos for account overview and post management.
-video.upload: upload user-selected video media.
-video.publish: publish the reviewed video post after user action.
+user.info.basic: show the connected name, username and avatar.
+user.info.stats: follower, following, likes and video counts in analytics.
+video.list: find the account's videos for analytics and to match inbox drafts.
+video.upload: upload the selected video as an inbox draft.
+video.publish: publish the reviewed video after the user confirms.
 
-Revision: added Rahiel branding plus visible Privacy, Terms, and Data Deletion pages:
-https://planner.rahielstudios.ch/privacy
-https://planner.rahielstudios.ch/terms
-https://planner.rahielstudios.ch/deletion
+Changes: removed unused user.info.profile scope. Direct post now needs an explicit privacy choice, has comments off by default and shows the consent line.
 ```
-
-Character count: 961 including newlines.
 
 ## Public URLs
 
