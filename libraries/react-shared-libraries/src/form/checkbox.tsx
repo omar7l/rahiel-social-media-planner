@@ -50,9 +50,10 @@ export const Checkbox = forwardRef<
         {...disableForm ? {} : form.register(props.name!)}
         onClick={changeStatus}
         className={clsx(
-          'cursor-pointer rounded-[4px] select-none w-[24px] h-[24px] justify-center items-center flex text-white',
+          'cursor-pointer rounded-[4px] select-none w-[24px] h-[24px] justify-center items-center flex',
+          // Hollow boxes sit on a light or dark fill, so their check takes the page text colour.
           variant === 'default' || !variant
-            ? 'bg-forth'
+            ? 'bg-forth text-white'
             : 'border-customColor1 border-2 bg-customColor2',
           className
         )}

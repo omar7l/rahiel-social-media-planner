@@ -41,8 +41,15 @@ const useTikTokCreatorInfo = (enabled: boolean) => {
   const { get } = useCustomProviderFunction();
   return useSWR<TikTokCreatorInfo>(
     enabled && integration?.id ? ['tiktok-creator-info', integration.id] : null,
-    () => get('creatorInfo'),
-    { revalidateOnFocus: false }
+    async () => {
+      const info = await get('creatorInfo');
+      // An expired or revoked connection comes back empty, not as an error.
+      // Throwing shows the reconnect message instead of "Loading" forever.
+      if (!info?.privacyLevelOptions)
+        throw new Error('TikTok creator info unavailable');
+      return info;
+    },
+    { revalidateOnFocus: false, shouldRetryOnError: false }
   );
 };
 
